@@ -1,0 +1,59 @@
+# Gopkg.toml example
+#
+# Refer to https://github.com/golang/dep/blob/master/docs/Gopkg.toml.md
+# for detailed Gopkg.toml documentation.
+#
+# required = ["github.com/user/thing/cmd/thing"]
+# ignored = ["github.com/user/project/pkgX", "bitbucket.org/user/project/pkgA/pkgY"]
+#
+# [[constraint]]
+#   name = "github.com/user/project"
+#   version = "1.0.0"
+#
+# [[constraint]]
+#   name = "github.com/user/project2"
+#   branch = "dev"
+#   source = "github.com/myfork/project2"
+#
+# [[override]]
+#   name = "github.com/x/y"
+#   version = "2.4.0"
+#
+# [prune]
+#   non-go = false
+#   go-tests = true
+#   unused-packages = true
+
+[[constraint]]
+  name = "github.com/fatih/color"
+  version = "v1.6.0"
+
+[[constraint]]
+  name = "github.com/spf13/cobra"
+  version = "v0.0.3"
+
+[[constraint]]
+  name = "github.com/onsi/ginkgo"
+  version = "v1.5.0"
+
+[[constraint]]
+  name = "github.com/onsi/gomega"
+  version = "1.4.0"
+
+[[constraint]]
+  name = "github.com/lordofthejars/jsondiff"
+  branch = "master"
+
+# To automatically create a json patch doc
+[[constraint]]
+  name = "github.com/mattbaird/jsonpatch"
+  branch = "master"
+
+# To apply json patch
+[[constraint]]
+  name = "github.com/evanphx/json-patch"
+  version = "v3.0.0"
+
+[prune]
+  go-tests = true
+  unused-packages = true
