@@ -1,0 +1,20 @@
+* xref:index.adoc[Introduction to Diferencia]
+
+* xref:why.adoc[Why Diferencia]
+** xref: why.adoc#opendiffy[Based on OpenDiffy]
+
+* Get Diferencia
+** xref:supported-platforms.adoc[System Requirements]
+*** xref:installation.adoc[Install]
+*** xref:installation.adoc#docker[Docker]
+
+* xref:run-diferencia.adoc[Run Diferencia]
+
+** xref:run-diferencia.adoc#modes[Running Modes]
+*** xref:run-diferencia.adoc#strict[Strict]
+*** xref:run-diferencia.adoc#subset[Subset]
+
+** xref:run-diferencia.adoc#noise[Noise Detection]
+** xref:run-diferencia.adoc#configuration[Configuration]
+
+* xref:what_next.adoc[What's Next]

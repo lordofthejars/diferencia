@@ -2,12 +2,6 @@
 
 
 [[projects]]
-  branch = "master"
-  name = "github.com/elazarl/goproxy"
-  packages = ["."]
-  revision = "91d82cc1070b9ec55e722ab471af64c82b2bcb9c"
-
-[[projects]]
   name = "github.com/evanphx/json-patch"
   packages = ["."]
   revision = "afac545df32f2287a079e2dfb7ba2745a643747e"
@@ -154,6 +148,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8cc5bf906bc15d52b1c58d8bf208711b0c30faa4e4f3394f6a6837738db18cca"
+  inputs-digest = "88318061f01ba2958048d7fc12c03bf7c6935e0db26a65a3ded8557ab724842c"
   solver-name = "gps-cdcl"
   solver-version = 1

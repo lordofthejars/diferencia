@@ -29,7 +29,7 @@ func main() {
 
 			config.Port = port
 			config.Primary = primaryURL
-			config.Seconday = secondaryURL
+			config.Secondary = secondaryURL
 			config.Candidate = candidateURL
 			config.StoreResults = storeResults
 			config.NoiseDetection = noiseDetection

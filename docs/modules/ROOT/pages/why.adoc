@@ -1,0 +1,31 @@
+= Why Diferencia?
+
+When building a service-based architecture where each service might be deployed independently, it is important to validate that the new version of the service is still compatible with the old version and this new version is able to *produce* a response that it is still processable by any *consumer*.
+
+One way of resolving this problem is by using contracts and contract testing.
+You define a contract (or agreement) on how the API should look like to communicate between *consumer* and *provider* services, so when a new version of the service (either consumer or provider) is released, you check if meets the contract.
+If not then you know that something has been broken, and you need to fix it before you release the service.
+One of these libraries for writing contract tests is https://docs.pact.io/[Pact].
+
+But contract tests are not infallible, and in our experience there are some drawbacks that might occur.
+
+* You can implement a new service endpoint but not defining it in the contract. Since contract does not know about its existance, this endpoing is never validated by contract test.
+* If you have already implemented serveral services, then it is really painful to start writting contracts for already developed services htat you know that they are working. So usually you end up by validating this manually.
+* In our experience, contract tests are not widely adopted and companies relies on manual testing to validate that services can communicate each other without any problem.
+
+In this sense Diferencia helps you on mitagating these problems.
+Obviously the best approach would be contract tests + Diferencia, but if you cannot do contract tests or you are into manual testing for validating compatibility between services, then definetely Diferencia is your tool.
+
+Diferencia is written in Go which make the transition into containers/Kubernetes world really smooth.
+
+IMPORTANT: Diferencia can be used as standalone proxy as well as inside Kubernetes/OpenShift.
+
+[#opendiffy]
+== OpenDiffy
+
+The idea of Diferencia is not new.
+In fact it is based on the awesome work done in https://github.com/opendiffy/diffy[OpenDiffy] but we decide to rewrite it for some reasons:
+
+* Write it in Go
+* Have a light proxy that integrates easily with containers, without so many frictions
+* Integrate with other existing Kubernetes tools written in Go.

@@ -1,0 +1,15 @@
+= Diferencia
+
+Diferencia is designed to act as a proxy which intercepts calls to a service and multicast it to several instances of same service.
+These instances are old and new version of the service.
+Then when the response is retuened from each instance, Diferencia will check if both responses are _similar_ (we will see later what it means _similar_), and if it is the case, then the two implementations might be considered compatible and the new version implementation is *regression-free*.
+
+.Overview of Diferencia
+image::diferencia_simple.png[]
+
+In previous schema you can see that a request is multicasted to two instances of _Service A_, one being *V1* and to other *V2*.
+Both returns a response and then it is compared by Diferencia.
+Finally notice that no response is returned but the result (in form of `HTTP Status Code`).
+
+Since Diferencia does not return a real response, but a comparision, effectively means that you need to use Diferencia proxy for testing purposes (to check backward compatibility) and not as a production proxy like Envoy.
+This means that Diferencia might be used to run concrete tests for backward compatibility or using *Traffic Shadowing*/*Mirroring* technique.

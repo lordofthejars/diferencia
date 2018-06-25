@@ -1,0 +1,7 @@
+= Supported platforms and system requirements
+
+Diferencia is just a Go library so it can be natively compiled to many different operative systems and hardware.
+
+Currently support is provided to `Mac OS X` 64 bits, `Linux` 64 bits, `Windows` 64 bits and `Docker` image.
+
+NOTE: If you need support for any other platform feel free to open an issue to the project and we will add support for other architectures.

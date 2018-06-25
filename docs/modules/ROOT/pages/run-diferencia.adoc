@@ -1,0 +1,165 @@
+= Run Diferencia
+include::_attributes.adoc[]
+
+Assumptions:
+
+* [x] You've xref:installation.adoc[installed Diferencia] using any of the methods explained there.
+* [x] Have `curl` installed.
+* [x] You have checked that `curl 'http://rest.ensembl.org/info/ping' -H 'Content-type:application/json'` returns a JSON document.
+* [x] You have checked that `curl http://now.httpbin.org/` returns a JSON document.
+
+== Starting Diferencia
+
+To start diferencia you only need to run next command from your terminal:
+
+`~$ diferencia start -c http://rest.ensembl.org -p http://rest.ensembl.org`
+
+This command just start Diferencia proxy, configuring it to use http://rest.ensembl.org (`-p`) as primary [_old version_] and http://rest.ensembl.org (`-c`) as candidate [_new version_].
+For sake of simplicity now both versions points to same host, but in a real use case, hosts would be different.
+
+Then run next `curl` command:
+
+`curl 'http://localhost:8080/info/ping' -H 'Content-type:application/json' -i`
+
+And the response is `HTTP/1.1 200 OK` because obviously both are the same version so they are producing the same output.
+
+What is happening under the cover when you do that `curl` operation is that Diferencia proxy replaces the host with _primary_ host and sends the request to it (_http://rest.ensembl.org/info/ping_) and then do the same with the _candidate_ host, sending the request to it (_http://rest.ensembl.org/info/ping_).
+
+After that both responses are compared and if they are *strictly* equal then an HTTP 200 OK method is returned from proxy.
+
+[#modes]
+== Running Modes
+
+In previous example both responses must be *strictly* equal (this means that JSON schema and each key/value must be equal).
+
+But there are other modes that we are going to describe in next sections:
+
+[#strict]
+=== Strict
+
+`Strict` mode checks that every key/value is strictly equal.
+
+[#subset]
+=== Subset
+
+`Subset` mode checks if candidate response is a subset of primary response.
+For example:
+
+.V1
+[source, yaml]
+----
+{
+    "name": "Alex",
+    "surname": "Soto"
+}
+----
+
+and
+
+.V2
+[source, yaml]
+----
+{
+    "name": "Alex",
+    "surname": "Soto",
+    "fullname": "Alex Soto"
+}
+----
+
+`V2` document is a subset of `V1`, so in this case Diferencia will say that both documents are equal.
+
+[#noise]
+== Noise Detection
+
+If you have Diferencia started from <<Starting Diferencia>> section, stop it and start it again with next command:
+
+`diferencia start -c http://now.httpbin.org/ -p http://now.httpbin.org/`
+
+Now we are configuring Diferencia proxy to redirect requests to _http://now.httpbin.org/_ which basically returns the current time.
+
+So you can run next `curl` operation:
+
+`curl 'http://localhost:8080/' -i`
+
+And the response is `HTTP/1.1 412 Precondition Failed`. 
+This is happening because although you are sending the request to the same service, it is returning the current time which of course it is not the same in both calls.
+This thing that it is pretty obvious makes that Diferencia result is a failure, saying that both services are not compatible (so there is a regression), when the truth is that they are equally valid, but having a *value* different.
+
+To fix this there is a noise cancellation algorithm that detects these dynamic values and supress them from JSON document.
+This algorithm sends request to not two instances but three.
+Two are the old instances (_primary_ and _secondary_) and one to the new instance (_candidate_).
+
+The request to _primary_ and _seconday_ returns a valid requests (since old instances are the correct ones), then from their responses, Diferencia checks for the differences between both responses. 
+
+Since both responses are valid (because the source is the same but different instances), the differences that are between them are just noise that should not take into consideration for response validation.
+
+Then detected noise is removed from _primary_ and _candidate_ response, and they are compared, if they are equal, then you know that everything is fine.
+
+This can be summarized in next schema:
+
+.Noise Cancellation
+image::noise.png[]
+
+Now stop Diferencia and start it again with next command:
+
+`diferencia start -c http://now.httpbin.org/ -p http://now.httpbin.org/ -s http://now.httpbin.org/ -n`
+
+You are setting URLs for _primary_ (`-c`), _secondary_ (`-s`), _candidate_ (`-c`) and finally that you want to enable noise reduction (`-n`).
+
+Now just execute the same `curl` command as before.
+
+`curl 'http://localhost:8080/' -i`
+
+And now the response is totally different returning a `200 OK`.
+
+[#configuration]
+== Configuration
+
+In next table you can see all possible configuration arguments that you can pass to Differentia:
+
+=== start
+
+[cols="3,5a,2,2a"]
+|===
+|Option|Purpose|Format|Default
+
+|--primary (-p)
+|Sets primary URL
+|URL
+|<mandatory>
+
+|--secondary (-s)
+|Sets secondary URL, only valid in case of Noise Reduction
+|URL
+|
+
+|--candidate (-c)
+|Sets candidate URL
+|URL
+|<mandatory>
+
+|--noisedetection (-n)
+|Enable noise detection
+|Boolean
+|false
+
+|--difference (-d)
+|Sets differencia mode
+|Strict,Subset 
+|Strict
+
+|--unsafe (-u)
+|Allow none safe operations like PUT, POST, PATCH, ..
+|Boolean
+|false
+
+|--storeResults
+|Directory where output is set. If not specified then nothing is stored. Useful for local development.
+|File
+|
+
+|--port
+|Sets port where proxy is started
+|integer
+|8080
+|===
