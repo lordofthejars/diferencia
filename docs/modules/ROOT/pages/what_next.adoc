@@ -8,3 +8,4 @@ Diferencia is under development so currently only basic features are implemented
 * Better noise cancellation for random values
 * Dashboard
 * Changing dynamically configuration parameters so the proxy can be reused.
+* Move to Logrus
