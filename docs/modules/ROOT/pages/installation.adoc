@@ -3,7 +3,7 @@ include::_attributes.adoc[]
 
 To install Diferencia you only need to go to release page onhttps://github.com/lordofthejars/diferencia/releases[GitHub Release] select the platform and the version and download it.
 
-Then you just need to rename the file to something more meanful name such as `diferencia` and add it to your `PATH` directory.
+Then you just need to rename the file to something more meaningful name such as `diferencia` and add it to your `PATH` directory.
 
 == Linux and Mac OS X
 In case of `Linux` and `Mac OS X` you can run next commands:
@@ -31,6 +31,6 @@ Diferencia is also provided as Docker image.
 
 For example:
 
-`~ $  docker run -ti --rm -p 8000:8000 lordofthejars/diferencia:<version>` 
+`~ $  docker run -ti --rm -p 8080:8080 lordofthejars/diferencia:<version>` 
 
-Just start Test Hub server at port `8080`.
+Just start Diferencia proxy at port `8080`.
