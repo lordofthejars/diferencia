@@ -14,23 +14,23 @@ To start diferencia you only need to run next command from your terminal:
 
 `~$ diferencia start -c http://rest.ensembl.org -p http://rest.ensembl.org`
 
-This command just start Diferencia proxy, configuring it to use http://rest.ensembl.org (`-p`) as primary [_old version_] and http://rest.ensembl.org (`-c`) as candidate [_new version_].
-For sake of simplicity now both versions points to same host, but in a real use case, hosts would be different.
+This command just starts Diferencia proxy, configuring it to use http://rest.ensembl.org (`-p`) as the primary [_old version_] and http://rest.ensembl.org (`-c`) as the candidate [_new version_].
+For sake of simplicity now both versions point to te same host, but in a real use case, hosts would be different.
 
 Then run next `curl` command:
 
 `curl 'http://localhost:8080/info/ping' -H 'Content-type:application/json' -i`
 
-And the response is `HTTP/1.1 200 OK` because obviously both are the same version so they are producing the same output.
+And the response is `HTTP/1.1 200 OK` because obviously, both are the same version so they are producing the same output.
 
 What is happening under the cover when you do that `curl` operation is that Diferencia proxy replaces the host with _primary_ host and sends the request to it (_http://rest.ensembl.org/info/ping_) and then do the same with the _candidate_ host, sending the request to it (_http://rest.ensembl.org/info/ping_).
 
-After that both responses are compared and if they are *strictly* equal then an HTTP 200 OK method is returned from proxy.
+After that, both responses are compared and if they are *strictly* equal then an HTTP 200 OK method is returned from the proxy.
 
 [#modes]
 == Running Modes
 
-In previous example both responses must be *strictly* equal (this means that JSON schema and each key/value must be equal).
+In the previous example, both responses must be *strictly* equal (this means that JSON schema and each key/value must be equal).
 
 But there are other modes that we are going to describe in next sections:
 
@@ -66,7 +66,7 @@ and
 }
 ----
 
-`V2` document is a subset of `V1`, so in this case Diferencia will say that both documents are equal.
+`V2` document is a subset of `V1`, so in this case, Diferencia will say that both documents are equal.
 
 [#noise]
 == Noise Detection
@@ -85,11 +85,11 @@ And the response is `HTTP/1.1 412 Precondition Failed`.
 This is happening because although you are sending the request to the same service, it is returning the current time which of course it is not the same in both calls.
 This thing that it is pretty obvious makes that Diferencia result is a failure, saying that both services are not compatible (so there is a regression), when the truth is that they are equally valid, but having a *value* different.
 
-To fix this there is a noise cancellation algorithm that detects these dynamic values and supress them from JSON document.
-This algorithm sends request to not two instances but three.
+To fix this there is a noise cancellation algorithm that detects these dynamic values and suppress them from JSON document.
+This algorithm sends the request to not two instances but three.
 Two are the old instances (_primary_ and _secondary_) and one to the new instance (_candidate_).
 
-The request to _primary_ and _seconday_ returns a valid requests (since old instances are the correct ones), then from their responses, Diferencia checks for the differences between both responses. 
+The request to _primary_ and _seconday_ returns a valid request (since old instances are the correct ones), then from their responses, Diferencia checks for the differences between both responses. 
 
 Since both responses are valid (because the source is the same but different instances), the differences that are between them are just noise that should not take into consideration for response validation.
 
@@ -154,12 +154,12 @@ In next table you can see all possible configuration arguments that you can pass
 |false
 
 |--storeResults
-|Directory where output is set. If not specified then nothing is stored. Useful for local development.
+|Directory where the output is set. If not specified then nothing is stored. Useful for local development.
 |File
 |
 
 |--port
-|Sets port where proxy is started
+|Sets port where the proxy is started
 |integer
 |8080
 |===
