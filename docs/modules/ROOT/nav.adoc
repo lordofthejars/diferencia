@@ -5,7 +5,7 @@
 
 * Get Diferencia
 ** xref:supported-platforms.adoc[System Requirements]
-*** xref:installation.adoc[Install]
+** xref:installation.adoc[Install]
 *** xref:installation.adoc#docker[Docker]
 
 * xref:run-diferencia.adoc[Run Diferencia]
