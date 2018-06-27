@@ -14,8 +14,9 @@ To start diferencia you only need to run next command from your terminal:
 
 `~$ diferencia start -c http://rest.ensembl.org -p http://rest.ensembl.org`
 
-This command just starts Diferencia proxy, configuring it to use http://rest.ensembl.org (`-p`) as the primary [_old version_] and http://rest.ensembl.org (`-c`) as the candidate [_new version_].
-For sake of simplicity now both versions point to te same host, but in a real use case, hosts would be different.
+This command just starts Diferencia proxy, configuring it to use http://rest.ensembl.org (`-p`) as the primary (_old version_) and http://rest.ensembl.org (`-c`) as the candidate (_new version_).
+
+NOTE: For sake of simplicity now both versions point to te same host, but in a real use case, hosts would be different.
 
 Then run next `curl` command:
 
