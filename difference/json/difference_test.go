@@ -6,7 +6,7 @@ import (
 
 	"github.com/lordofthejars/diferencia/core"
 
-	"github.com/lordofthejars/diferencia/json"
+	"github.com/lordofthejars/diferencia/difference/json"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

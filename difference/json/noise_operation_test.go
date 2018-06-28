@@ -3,7 +3,7 @@ package json_test
 import (
 	"fmt"
 
-	"github.com/lordofthejars/diferencia/json"
+	"github.com/lordofthejars/diferencia/difference/json"
 	"github.com/mattbaird/jsonpatch"
 
 	. "github.com/onsi/ginkgo"

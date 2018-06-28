@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/lordofthejars/diferencia/difference/json"
 	"github.com/lordofthejars/diferencia/exporter"
-	"github.com/lordofthejars/diferencia/json"
 
 	"github.com/lordofthejars/diferencia/log"
 )
@@ -105,7 +105,7 @@ func Diferencia(r *http.Request) (bool, error) {
 	// Get request from primary
 	primaryFullURL := CreateUrl(*r.URL, Config.Primary)
 	log.Debug("Forwarding call to %s", primaryFullURL)
-	primaryBodyContent, primaryStatus, err := getContent(r, primaryFullURL)
+	primaryBodyContent, primaryStatus, _, err := getContent(r, primaryFullURL)
 	if err != nil {
 		log.Error("Error while connecting to Primary site (%s) with %s", primaryFullURL, err.Error())
 		return false, &DiferenciaError{http.StatusServiceUnavailable, fmt.Sprintf("Error while connecting to Primary site (%s) with %s", primaryFullURL, err.Error())}
@@ -114,7 +114,7 @@ func Diferencia(r *http.Request) (bool, error) {
 	// Get candidate
 	candidateFullURL := CreateUrl(*r.URL, Config.Candidate)
 	log.Debug("Forwarding call to %s", candidateFullURL)
-	candidateBodyContent, candidateStatus, err := getContent(r, candidateFullURL)
+	candidateBodyContent, candidateStatus, _, err := getContent(r, candidateFullURL)
 	if err != nil {
 		log.Error("Error while connecting to Candidate site (%s) with %s", candidateFullURL, err.Error())
 		return false, &DiferenciaError{http.StatusServiceUnavailable, fmt.Sprintf("Error while connecting to Candidate site (%s) with %s", candidateFullURL, err.Error())}
@@ -130,7 +130,7 @@ func Diferencia(r *http.Request) (bool, error) {
 		// Get secondary to do the noise cancellation
 		secondaryFullURL := CreateUrl(*r.URL, Config.Secondary)
 		log.Debug("Forwarding call to %s", secondaryFullURL)
-		secondaryBodyContent, secondaryStatus, err := getContent(r, secondaryFullURL)
+		secondaryBodyContent, secondaryStatus, _, err := getContent(r, secondaryFullURL)
 		if err != nil {
 			log.Error("Error while connecting to Secondary site (%s) with error %s", candidateFullURL, err.Error())
 			return false, &DiferenciaError{http.StatusServiceUnavailable, fmt.Sprintf("Error while connecting to Secondary site (%s) with error %s", candidateFullURL, err.Error())}
@@ -147,16 +147,14 @@ func Diferencia(r *http.Request) (bool, error) {
 			}
 			primaryWithoutNoise, candidateWithoutNoise, err := noiseOperation.Remove(primaryBodyContent, candidateBodyContent)
 
-			// Comparision between documents without noise
-			result = json.CompareDocuments(candidateWithoutNoise, primaryWithoutNoise, Config.DifferenceMode.String())
+			result = compareResult(candidateWithoutNoise, primaryWithoutNoise, candidateStatus, primaryStatus)
 		} else {
 			log.Error("Status code between %s(%d) and %s(%d) are different", primaryFullURL, primaryStatus, secondaryFullURL, secondaryStatus)
 			return false, &DiferenciaError{http.StatusBadRequest, fmt.Sprintf("Status code between %s(%d) and %s(%d) are different", primaryFullURL, primaryStatus, secondaryFullURL, secondaryStatus)}
 		}
 	} else {
 		// Comparision without noise cancellation
-		// What's happen with status code? if
-		result = json.CompareDocuments(candidateBodyContent, primaryBodyContent, Config.DifferenceMode.String())
+		result = compareResult(candidateBodyContent, primaryBodyContent, candidateStatus, primaryStatus)
 	}
 
 	if Config.IsStoreResultsSet() {
@@ -177,6 +175,14 @@ func Diferencia(r *http.Request) (bool, error) {
 
 	return result, nil
 
+}
+
+func compareResult(candidate, primary []byte, candidateStatus, primaryStatus int) bool {
+	if primaryStatus == candidateStatus {
+		// Comparision between documents without noise
+		return json.CompareDocuments(candidate, primary, Config.DifferenceMode.String())
+	}
+	return false
 }
 
 func diferenciaHandler(w http.ResponseWriter, r *http.Request) {
@@ -214,17 +220,17 @@ func isSafeOperation(method string) bool {
 	return method == http.MethodGet || method == http.MethodOptions || method == http.MethodHead
 }
 
-func getContent(r *http.Request, url string) ([]byte, int, error) {
+func getContent(r *http.Request, url string) ([]byte, int, http.Header, error) {
 	resp, err := HttpClient.MakeRequest(r, url)
 
 	if err != nil {
 		// In case of error in service we should add as metrics as well or assume that the service itself would communicate to metrics?
-		return make([]byte, 0), 0, err
+		return make([]byte, 0), 0, nil, err
 	}
 
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	defer resp.Body.Close()
 
-	return bodyBytes, resp.StatusCode, err
+	return bodyBytes, resp.StatusCode, resp.Header, err
 
 }

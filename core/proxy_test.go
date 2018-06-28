@@ -65,7 +65,39 @@ var _ = Describe("Proxy", func() {
 				Expect(result).Should(Equal(true))
 				Expect(err).Should(Succeed())
 			})
+			It("should return false if status code are different", func() {
+				// Given
+				var httpClient = &StubHttpClient{}
+				// Record Http Client responses
+				recordContent(httpClient, "test_fixtures/document-a.json", "test_fixtures/document-a-change-date.json")
+				recordStatus(httpClient, 200, 201)
+				core.HttpClient = httpClient
 
+				// Prepare Configuration object
+				conf := &core.DiferenciaConfiguration{
+					Port:                  8080,
+					Primary:               "http://now.httpbin.org/",
+					Candidate:             "http://now.httpbin.org/",
+					StoreResults:          "",
+					DifferenceMode:        core.Strict,
+					NoiseDetection:        false,
+					AllowUnsafeOperations: false,
+				}
+				core.Config = conf
+
+				// Create stubbed http.Request object
+				url, _ := url.Parse("http://localhost:8080")
+				request := createRequest(http.MethodGet, url)
+
+				// When
+
+				result, err := core.Diferencia(&request)
+
+				//Then
+
+				Expect(result).Should(Equal(false))
+				Expect(err).Should(Succeed())
+			})
 			It("should return false if both documents are different", func() {
 
 				// Given
