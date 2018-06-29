@@ -124,6 +124,11 @@ In next table you can see all possible configuration arguments that you can pass
 |===
 |Option|Purpose|Format|Default
 
+|--serviceName
+|Sets service name under test
+|string
+|Hostname of candidate
+
 |--primary (-p)
 |Sets primary URL
 |URL
@@ -163,4 +168,14 @@ In next table you can see all possible configuration arguments that you can pass
 |Sets port where the proxy is started
 |integer
 |8080
+
+|--prometheus
+|Enables Prometheus endpoint
+|boolean
+|false
+
+|--prometheusPort
+|Prometheus endpoint mort
+|int
+|8081
 |===

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net/url"
 	"os"
 
 	"github.com/lordofthejars/diferencia/core"
@@ -16,9 +17,11 @@ var rootCmd = &cobra.Command{
 func main() {
 
 	var port int
-	var primaryURL, secondaryURL, candidateURL, difference string
+	var serviceName, primaryURL, secondaryURL, candidateURL, difference string
 	var allowUnsafeOperations, noiseDetection bool
 	var storeResults string
+	var prometheus bool
+	var prometheusPort int
 
 	var cmdStart = &cobra.Command{
 		Use:   "start",
@@ -28,12 +31,16 @@ func main() {
 			config := core.DiferenciaConfiguration{}
 
 			config.Port = port
+			config.ServiceName = serviceName
 			config.Primary = primaryURL
 			config.Secondary = secondaryURL
 			config.Candidate = candidateURL
 			config.StoreResults = storeResults
 			config.NoiseDetection = noiseDetection
 			config.AllowUnsafeOperations = allowUnsafeOperations
+			config.Prometheus = prometheus
+			config.PrometheusPort = prometheusPort
+
 			differenceMode, err := core.NewDifference(difference)
 
 			if err != nil {
@@ -49,11 +56,17 @@ func main() {
 
 			}
 
+			if len(config.ServiceName) == 0 {
+				candidateURL, _ := url.Parse(config.Candidate)
+				config.ServiceName = candidateURL.Hostname()
+			}
+
 			core.StartProxy(&config)
 		},
 	}
 
 	cmdStart.Flags().IntVar(&port, "port", 8080, "Listening port of Diferencia proxy")
+	cmdStart.Flags().StringVar(&serviceName, "serviceName", "", "Sets service name under test. By default it takes candidate hostname")
 	cmdStart.Flags().StringVarP(&primaryURL, "primary", "p", "", "Primary Service URL")
 	cmdStart.Flags().StringVarP(&secondaryURL, "secondary", "s", "", "Secondary Service URL")
 	cmdStart.Flags().StringVarP(&candidateURL, "candidate", "c", "", "Candidate Service URL")
@@ -61,6 +74,9 @@ func main() {
 	cmdStart.Flags().BoolVarP(&allowUnsafeOperations, "unsafe", "u", false, "Allow none safe operations like PUT, POST, PATCH, ...")
 	cmdStart.Flags().BoolVarP(&noiseDetection, "noisedetection", "n", false, "Enable noise detection. Secondary URL must be provided.")
 	cmdStart.Flags().StringVar(&storeResults, "storeResults", "", "Directory where output is set. If not specified then nothing is stored. Useful for local development.")
+
+	cmdStart.Flags().BoolVar(&prometheus, "prometheus", false, "Enable Prometheus endpoint")
+	cmdStart.Flags().IntVar(&prometheusPort, "prometheusPort", 8081, "Prometheus port")
 
 	cmdStart.MarkFlagRequired("primary")
 	cmdStart.MarkFlagRequired("candidate")

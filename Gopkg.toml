@@ -44,6 +44,10 @@
   name = "github.com/lordofthejars/jsondiff"
   branch = "master"
 
+[[constraint]]
+  name = "github.com/prometheus/client_golang"
+  revision = "d6a9817c4a"
+
 # To automatically create a json patch doc
 [[constraint]]
   name = "github.com/mattbaird/jsonpatch"

@@ -1,0 +1,37 @@
+= Prometheus
+include::_attributes.adoc[]
+
+Assumptions:
+
+* [x] What is Prometheus
+* [x] You have a Prometheus server
+
+== Enabling Prometheus 
+
+By default, Diferencia does not expose data to Prometheus (does not expose `/metrics` endpoint).
+But you can enable this by using `--prometheus` flag
+
+Starting Diferencia with `--prometheus` flag will effectively open port `8081` and exposes a _countervec_ that is incremented for each regression detected.
+
+The metric has a namespace which is the hostname of candidate host, replacing dots to underlines.
+The name of metric is `service_regressions_failures_total`, and finally, it contains two labels one for HTTP method and the other for the request URL part.
+
+So you can check a counter for each pair HTTP method/Request so you can inspect how is behaving.
+Ideally, it should be always 0 which means no regressions.
+
+An example of the output:
+
+[source]
+./metrics
+----
+# HELP now_httpbin_org_service_regressions_failures_total Number of regressions detected by endpoints.
+# TYPE now_httpbin_org_service_regressions_failures_total counter
+now_httpbin_org_service_regressions_failures_total{method="GET",path="/"} 3
+----
+
+[TIP]
+====
+You can be overridden namespace by using `--serviceName` option.
+
+Also, you can change the Prometheus listening port by using `--prometheusPort` option.
+====
