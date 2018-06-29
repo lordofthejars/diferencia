@@ -8,6 +8,8 @@ import (
 
 	"github.com/lordofthejars/diferencia/difference/json"
 	"github.com/lordofthejars/diferencia/exporter"
+	"github.com/lordofthejars/diferencia/metrics"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/lordofthejars/diferencia/log"
 )
@@ -42,6 +44,14 @@ func NewDifference(difference string) (Difference, error) {
 	return -1, fmt.Errorf("Cannot find %s difference mode", difference)
 }
 
+// HttpClient interface to make requests with changed URL
+var HttpClient Client = &HTTPClient{}
+
+// Config object
+var Config *DiferenciaConfiguration
+
+var prometheusCounter *prometheus.CounterVec
+
 const (
 	// Strict mode everything should be exactly the same
 	Strict Difference = 0
@@ -54,11 +64,14 @@ const (
 // DiferenciaConfiguration object
 type DiferenciaConfiguration struct {
 	Port                          int
+	ServiceName                   string
 	Primary, Secondary, Candidate string
 	StoreResults                  string
 	DifferenceMode                Difference
 	NoiseDetection                bool
 	AllowUnsafeOperations         bool
+	Prometheus                    bool
+	PrometheusPort                int
 }
 
 // IsStoreResultsSet in configuration object
@@ -69,6 +82,7 @@ func (conf DiferenciaConfiguration) IsStoreResultsSet() bool {
 // Print configuration
 func (conf DiferenciaConfiguration) Print() {
 	fmt.Printf("Port: %d\n", conf.Port)
+	fmt.Printf("Service Name: %s\n", conf.ServiceName)
 	fmt.Printf("Primary: %s\n", conf.Primary)
 	fmt.Printf("Secondary: %s\n", conf.Secondary)
 	fmt.Printf("Candidate: %s\n", conf.Candidate)
@@ -76,12 +90,9 @@ func (conf DiferenciaConfiguration) Print() {
 	fmt.Printf("Difference Mode: %s\n", conf.DifferenceMode.String())
 	fmt.Printf("Noise Detection: %t\n", conf.NoiseDetection)
 	fmt.Printf("Allow Unsafe Operations: %t\n", conf.AllowUnsafeOperations)
+	fmt.Printf("Prometheus Enabled: %t\n", conf.Prometheus)
+	fmt.Printf("Prometheus Port: %d\n", conf.PrometheusPort)
 }
-
-// HttpClient interface to make requests with changed URL
-var HttpClient Client = &HTTPClient{}
-
-var Config *DiferenciaConfiguration
 
 type DiferenciaError struct {
 	code    int
@@ -201,19 +212,12 @@ func diferenciaHandler(w http.ResponseWriter, r *http.Request) {
 	if result {
 		w.WriteHeader(http.StatusOK)
 	} else {
+		// If there is a regression
 		w.WriteHeader(http.StatusPreconditionFailed)
+		if Config.Prometheus {
+			prometheusCounter.WithLabelValues(r.Method, r.RequestURI).Inc()
+		}
 	}
-
-}
-
-// StartProxy server
-func StartProxy(configuration *DiferenciaConfiguration) {
-	Config = configuration
-	Config.Print()
-
-	// Matches everything
-	http.HandleFunc("/", diferenciaHandler)
-	log.Error("Error starting proxy: %s", http.ListenAndServe(":"+strconv.Itoa(Config.Port), nil))
 }
 
 func isSafeOperation(method string) bool {
@@ -232,5 +236,45 @@ func getContent(r *http.Request, url string) ([]byte, int, http.Header, error) {
 	defer resp.Body.Close()
 
 	return bodyBytes, resp.StatusCode, resp.Header, err
+
+}
+
+// StartProxy server
+func StartProxy(configuration *DiferenciaConfiguration) {
+
+	finish := make(chan bool)
+
+	Config = configuration
+	initialize()
+
+	go func() {
+		// Initialize Proxy server
+		proxyMux := http.NewServeMux()
+		// Matches everything
+		proxyMux.HandleFunc("/", diferenciaHandler)
+		log.Error("Error starting proxy: %s", http.ListenAndServe(":"+strconv.Itoa(Config.Port), proxyMux))
+	}()
+
+	go func() {
+		if Config.Prometheus {
+			//Initialize Prometheus endpoint
+			prometheusMux := http.NewServeMux()
+			prometheusMux.Handle("/metrics", prometheus.Handler())
+			log.Error("Error starting prometheus endpoint: %s", http.ListenAndServe(":"+strconv.Itoa(Config.PrometheusPort), prometheusMux))
+		}
+	}()
+
+	<-finish
+}
+
+func initialize() {
+
+	// Print config object
+	Config.Print()
+
+	//Initialize Prometheus if required
+	if Config.Prometheus {
+		prometheusCounter = metrics.RegisterNumberOfRegressions(Config.ServiceName)
+	}
 
 }

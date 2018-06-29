@@ -15,6 +15,7 @@
 *** xref:run-diferencia.adoc#subset[Subset]
 
 ** xref:run-diferencia.adoc#noise[Noise Detection]
+** xref:prometheus.adoc[Prometheus]
 ** xref:run-diferencia.adoc#configuration[Configuration]
 
 * xref:what_next.adoc[What's Next]
