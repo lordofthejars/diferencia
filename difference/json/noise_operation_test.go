@@ -36,10 +36,24 @@ var _ = Describe("Noise Operation", func() {
 				Expect(error).Should(Succeed())
 				Expect(noiseOperation.Patch).Should(HaveLen(4))
 
-				Expect(noiseOperation.Patch).Should(ContainElement(jsonpatch.NewPatch("remove", "/now/epoch", nil)))
-				Expect(noiseOperation.Patch).Should(ContainElement(jsonpatch.NewPatch("remove", "/now/iso8601", nil)))
-				Expect(noiseOperation.Patch).Should(ContainElement(jsonpatch.NewPatch("remove", "/now/rfc2822", nil)))
-				Expect(noiseOperation.Patch).Should(ContainElement(jsonpatch.NewPatch("remove", "/now/rfc3339", nil)))
+				Expect(noiseOperation.Patch).Should(ContainElement(jsonpatch.NewPatch("replace", "/now/epoch", 0)))
+				Expect(noiseOperation.Patch).Should(ContainElement(jsonpatch.NewPatch("replace", "/now/iso8601", 0)))
+				Expect(noiseOperation.Patch).Should(ContainElement(jsonpatch.NewPatch("replace", "/now/rfc2822", 0)))
+				Expect(noiseOperation.Patch).Should(ContainElement(jsonpatch.NewPatch("replace", "/now/rfc3339", 0)))
+			})
+
+			It("should return noise operations with remove instead of replace in arrays", func() {
+				documentA := loadFromFile("test_fixtures/document-a.json")
+				documentB := loadFromFile("test_fixtures/document-a-different-array.json")
+
+				noiseOperation := json.NoiseOperation{}
+
+				error := noiseOperation.Detect(documentA, documentB)
+
+				Expect(error).Should(Succeed())
+				Expect(noiseOperation.Patch).Should(HaveLen(1))
+
+				Expect(noiseOperation.Patch).Should(ContainElement(jsonpatch.NewPatch("replace", "/urls/1", 0)))
 			})
 		})
 
@@ -86,11 +100,7 @@ var _ = Describe("Noise Operation", func() {
 				documentB := loadFromFile("test_fixtures/document-a-change-date.json")
 
 				noiseOperation := json.NoiseOperation{}
-				noiseOperation.Patch = make([]jsonpatch.JsonPatchOperation, 4)
-				noiseOperation.Patch[0] = jsonpatch.NewPatch("remove", "/now/epoch", nil)
-				noiseOperation.Patch[1] = jsonpatch.NewPatch("remove", "/now/iso8601", nil)
-				noiseOperation.Patch[2] = jsonpatch.NewPatch("remove", "/now/rfc2822", nil)
-				noiseOperation.Patch[3] = jsonpatch.NewPatch("remove", "/now/rfc3339", nil)
+				noiseOperation.Detect(documentA, documentB)
 
 				primary, candidate, err := noiseOperation.Remove(documentA, documentB)
 
@@ -103,9 +113,44 @@ var _ = Describe("Noise Operation", func() {
 				Expect(result).Should(Equal(true))
 
 			})
-		})
+			It("should return both documents equal with array changes", func() {
 
-		Context("A primary and candidate with noise", func() {
+				documentA := loadFromFile("test_fixtures/document-a.json")
+				documentB := loadFromFile("test_fixtures/document-a-different-array.json")
+
+				noiseOperation := json.NoiseOperation{}
+				noiseOperation.Detect(documentA, documentB)
+
+				primary, candidate, err := noiseOperation.Remove(documentA, documentB)
+
+				if err != nil {
+					Fail(fmt.Sprintf("Failing removing noise. Reason: %q", err))
+				}
+
+				result := json.CompareDocuments(candidate, primary, "Strict")
+
+				Expect(result).Should(Equal(true))
+
+			})
+			It("should return both documents equal with json object changes", func() {
+
+				documentA := loadFromFile("test_fixtures/document-c.json")
+				documentB := loadFromFile("test_fixtures/document-c-simple.json")
+
+				noiseOperation := json.NoiseOperation{}
+				noiseOperation.Detect(documentA, documentB)
+
+				primary, candidate, err := noiseOperation.Remove(documentA, documentB)
+
+				if err != nil {
+					Fail(fmt.Sprintf("Failing removing noise. Reason: %q", err))
+				}
+
+				result := json.CompareDocuments(candidate, primary, "Strict")
+
+				Expect(result).Should(Equal(true))
+
+			})
 			It("should return both documents not equal if not all noise is removed", func() {
 
 				documentA := loadFromFile("test_fixtures/document-a.json")
@@ -113,9 +158,9 @@ var _ = Describe("Noise Operation", func() {
 
 				noiseOperation := json.NoiseOperation{}
 				noiseOperation.Patch = make([]jsonpatch.JsonPatchOperation, 3)
-				noiseOperation.Patch[0] = jsonpatch.NewPatch("remove", "/now/epoch", nil)
-				noiseOperation.Patch[1] = jsonpatch.NewPatch("remove", "/now/iso8601", nil)
-				noiseOperation.Patch[2] = jsonpatch.NewPatch("remove", "/now/rfc2822", nil)
+				noiseOperation.Patch[0] = jsonpatch.NewPatch("replace", "/now/epoch", 0)
+				noiseOperation.Patch[1] = jsonpatch.NewPatch("replace", "/now/iso8601", 0)
+				noiseOperation.Patch[2] = jsonpatch.NewPatch("replace", "/now/rfc2822", 0)
 
 				primary, candidate, err := noiseOperation.Remove(documentA, documentB)
 

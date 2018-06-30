@@ -17,6 +17,42 @@ func (nd NoiseOperation) ContainsNoise() bool {
 	return len(nd.Patch) > 0
 }
 
+// Detect Noise between documents
+func (nd *NoiseOperation) Detect(primary, secondary []byte) error {
+
+	patch, err := jsonpatch.CreatePatch(primary, secondary)
+
+	if err != nil {
+		return err
+	}
+
+	newPatch, err := validatePatchToContainOnlyReplaceAndChangeValue(patch)
+
+	if err != nil {
+		return err
+	}
+
+	nd.Patch = newPatch
+	return nil
+
+}
+
+func validatePatchToContainOnlyReplaceAndChangeValue(patch []jsonpatch.JsonPatchOperation) ([]jsonpatch.JsonPatchOperation, error) {
+
+	var replacePatches []jsonpatch.JsonPatchOperation
+
+	for _, operation := range patch {
+		if operation.Operation != "replace" {
+			return nil, fmt.Errorf("Primary and Secondary payload contains other changes apart from replacingvalues %s", operation.Json())
+		}
+
+		replacePatches = append(replacePatches, jsonpatch.NewPatch("replace", operation.Path, 0))
+
+	}
+
+	return replacePatches, nil
+}
+
 // Remove noise from primary and candidate documents
 func (nd *NoiseOperation) Remove(primary, candidate []byte) ([]byte, []byte, error) {
 
@@ -60,40 +96,4 @@ func (nd NoiseOperation) materializePatchOperations() []byte {
 	b.Write([]byte("]"))
 
 	return b.Bytes()
-}
-
-// Detect Noise between documents
-func (nd *NoiseOperation) Detect(primary, secondary []byte) error {
-
-	patch, err := jsonpatch.CreatePatch(primary, secondary)
-
-	if err != nil {
-		return err
-	}
-
-	newPatch, err := validatePatchToContainOnlyReplaceAndChangeToRemove(patch)
-
-	if err != nil {
-		return err
-	}
-
-	nd.Patch = newPatch
-	return nil
-
-}
-
-func validatePatchToContainOnlyReplaceAndChangeToRemove(patch []jsonpatch.JsonPatchOperation) ([]jsonpatch.JsonPatchOperation, error) {
-
-	var removePatches []jsonpatch.JsonPatchOperation
-
-	for _, operation := range patch {
-		if operation.Operation != "replace" {
-			return nil, fmt.Errorf("Primary and Secondary payload contains other changes apart from replacingvalues %s", operation.Json())
-		}
-
-		removePatches = append(removePatches, jsonpatch.NewPatch("remove", operation.Path, nil))
-
-	}
-
-	return removePatches, nil
 }
