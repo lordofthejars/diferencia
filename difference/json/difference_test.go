@@ -20,7 +20,7 @@ var _ = Describe("Json Difference", func() {
 				documentA := loadFromFile("test_fixtures/document-a.json")
 				documentB := loadFromFile("test_fixtures/document-a.json")
 
-				result := json.CompareDocuments(documentA, documentB, core.Strict)
+				result := json.CompareDocuments(documentA, documentB, core.Strict.String())
 				Expect(result).To(Equal(true))
 			})
 		})
@@ -30,7 +30,7 @@ var _ = Describe("Json Difference", func() {
 				documentA := loadFromFile("test_fixtures/document-a.json")
 				documentB := loadFromFile("test_fixtures/document-a.json")
 
-				result := json.CompareDocuments(documentA, documentB, core.Subset)
+				result := json.CompareDocuments(documentA, documentB, core.Subset.String())
 				Expect(result).To(Equal(true))
 			})
 		})
@@ -42,7 +42,7 @@ var _ = Describe("Json Difference", func() {
 				documentA := loadFromFile("test_fixtures/document-a.json")
 				documentB := loadFromFile("test_fixtures/document-b.json")
 
-				result := json.CompareDocuments(documentB, documentA, core.Strict)
+				result := json.CompareDocuments(documentB, documentA, core.Strict.String())
 				Expect(result).To(Equal(false))
 			})
 		})
@@ -52,7 +52,7 @@ var _ = Describe("Json Difference", func() {
 				documentA := loadFromFile("test_fixtures/document-a.json")
 				documentB := loadFromFile("test_fixtures/document-b.json")
 
-				result := json.CompareDocuments(documentB, documentA, core.Subset)
+				result := json.CompareDocuments(documentB, documentA, core.Subset.String())
 				Expect(result).To(Equal(false))
 			})
 		})
@@ -64,7 +64,7 @@ var _ = Describe("Json Difference", func() {
 				documentA := loadFromFile("test_fixtures/document-a.json")
 				documentB := loadFromFile("test_fixtures/document-a-change-date.json")
 
-				result := json.CompareDocuments(documentB, documentA, core.Strict)
+				result := json.CompareDocuments(documentB, documentA, core.Strict.String())
 				Expect(result).To(Equal(false))
 			})
 		})
@@ -74,7 +74,7 @@ var _ = Describe("Json Difference", func() {
 				documentA := loadFromFile("test_fixtures/document-a.json")
 				documentB := loadFromFile("test_fixtures/document-a-change-date.json")
 
-				result := json.CompareDocuments(documentB, documentA, core.Subset)
+				result := json.CompareDocuments(documentB, documentA, core.Subset.String())
 				Expect(result).To(Equal(false))
 			})
 		})
@@ -86,7 +86,7 @@ var _ = Describe("Json Difference", func() {
 				documentA := loadFromFile("test_fixtures/document-c.json")
 				documentB := loadFromFile("test_fixtures/document-c-update.json")
 
-				result := json.CompareDocuments(documentB, documentA, core.Strict)
+				result := json.CompareDocuments(documentB, documentA, core.Strict.String())
 				Expect(result).To(Equal(false))
 			})
 		})
@@ -96,7 +96,7 @@ var _ = Describe("Json Difference", func() {
 				documentA := loadFromFile("test_fixtures/document-c.json")
 				documentB := loadFromFile("test_fixtures/document-c-update.json")
 
-				result := json.CompareDocuments(documentB, documentA, core.Subset)
+				result := json.CompareDocuments(documentB, documentA, core.Subset.String())
 				Expect(result).To(Equal(true))
 			})
 
@@ -104,7 +104,7 @@ var _ = Describe("Json Difference", func() {
 				documentA := loadFromFile("test_fixtures/document-c.json")
 				documentB := loadFromFile("test_fixtures/document-c-update-type.json")
 
-				result := json.CompareDocuments(documentB, documentA, core.Subset)
+				result := json.CompareDocuments(documentB, documentA, core.Subset.String())
 				Expect(result).To(Equal(false))
 			})
 		})
