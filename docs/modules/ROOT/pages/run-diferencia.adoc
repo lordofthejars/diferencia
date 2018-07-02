@@ -28,10 +28,29 @@ What is happening under the cover when you do that `curl` operation is that Dife
 
 After that, both responses are compared and if they are *strictly* equal then an HTTP 200 OK method is returned from the proxy.
 
+[IMPORTANT]
+====
+By default Diferencia just skip any unsafe operation like `PUT`, `POST`, `DELETE` and `PATCH`, because they are not safe to run them blindly without taking into consideration their side effects.
+
+You can remove this restriction by starting Diferencia with `--unsafe` flag.
+====
+
 [#modes]
 == Running Modes
 
 In the previous example, both responses must be *strictly* equal (this means that JSON schema and each key/value must be equal).
+
+.About Headers
+****
+By default Diferencia only takes into consideration status code and body content and headers, for example, are ignored.
+
+You can enable header verification by setting `--headers` flag.
+
+You can also set which header values should be ignored by using `--ignoreHeadersValues Accept, Accept-Charset`
+
+Notice that this only apply to header value, not the key.
+So for the previous example, it is checked that both primary and candidate contains the same headers (pair key/value) but in case of `Accept` and `Accept-Charset` only it is checked that there are the keys present, but they don't need to have the same value.
+****
 
 But there are other modes that we are going to describe in next sections:
 
@@ -153,6 +172,16 @@ In next table you can see all possible configuration arguments that you can pass
 |Sets differencia mode
 |Strict,Subset 
 |Strict
+
+|--headers
+|Enable Http headers comparision
+|boolean
+|false
+
+|--ignoreHeadersValues
+|List of headers key where its value should be ignored for comparision purposes
+|CSV
+|
 
 |--unsafe (-u)
 |Allow none safe operations like PUT, POST, PATCH, ..

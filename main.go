@@ -22,6 +22,8 @@ func main() {
 	var storeResults string
 	var prometheus bool
 	var prometheusPort int
+	var headers bool
+	var ignoreHeadersValues []string
 
 	var cmdStart = &cobra.Command{
 		Use:   "start",
@@ -38,6 +40,8 @@ func main() {
 			config.StoreResults = storeResults
 			config.NoiseDetection = noiseDetection
 			config.AllowUnsafeOperations = allowUnsafeOperations
+			config.Headers = headers
+			config.IgnoreHeadersValues = ignoreHeadersValues
 			config.Prometheus = prometheus
 			config.PrometheusPort = prometheusPort
 
@@ -74,6 +78,9 @@ func main() {
 	cmdStart.Flags().BoolVarP(&allowUnsafeOperations, "unsafe", "u", false, "Allow none safe operations like PUT, POST, PATCH, ...")
 	cmdStart.Flags().BoolVarP(&noiseDetection, "noisedetection", "n", false, "Enable noise detection. Secondary URL must be provided.")
 	cmdStart.Flags().StringVar(&storeResults, "storeResults", "", "Directory where output is set. If not specified then nothing is stored. Useful for local development.")
+
+	cmdStart.Flags().BoolVar(&headers, "headers", false, "Enable Http headers comparision")
+	cmdStart.Flags().StringSliceVar(&ignoreHeadersValues, "ignoreHeadersValues", nil, "List of headers key where its value should be ignored for comparision purposes")
 
 	cmdStart.Flags().BoolVar(&prometheus, "prometheus", false, "Enable Prometheus endpoint")
 	cmdStart.Flags().IntVar(&prometheusPort, "prometheusPort", 8081, "Prometheus port")
