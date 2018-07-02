@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/lordofthejars/diferencia/difference/header"
+
 	"github.com/lordofthejars/diferencia/difference/json"
 	"github.com/lordofthejars/diferencia/exporter"
 	"github.com/lordofthejars/diferencia/metrics"
@@ -72,6 +74,8 @@ type DiferenciaConfiguration struct {
 	AllowUnsafeOperations         bool
 	Prometheus                    bool
 	PrometheusPort                int
+	Headers                       bool
+	IgnoreHeadersValues           []string
 }
 
 // IsStoreResultsSet in configuration object
@@ -89,6 +93,8 @@ func (conf DiferenciaConfiguration) Print() {
 	fmt.Printf("Store Results: %s\n", conf.StoreResults)
 	fmt.Printf("Difference Mode: %s\n", conf.DifferenceMode.String())
 	fmt.Printf("Noise Detection: %t\n", conf.NoiseDetection)
+	fmt.Printf("Headers: %t\n", conf.Headers)
+	fmt.Printf("Ignored Headers Values of: %v\n", conf.IgnoreHeadersValues)
 	fmt.Printf("Allow Unsafe Operations: %t\n", conf.AllowUnsafeOperations)
 	fmt.Printf("Prometheus Enabled: %t\n", conf.Prometheus)
 	fmt.Printf("Prometheus Port: %d\n", conf.PrometheusPort)
@@ -116,7 +122,7 @@ func Diferencia(r *http.Request) (bool, error) {
 	// Get request from primary
 	primaryFullURL := CreateUrl(*r.URL, Config.Primary)
 	log.Debug("Forwarding call to %s", primaryFullURL)
-	primaryBodyContent, primaryStatus, _, err := getContent(r, primaryFullURL)
+	primaryBodyContent, primaryStatus, primaryHeader, err := getContent(r, primaryFullURL)
 	if err != nil {
 		log.Error("Error while connecting to Primary site (%s) with %s", primaryFullURL, err.Error())
 		return false, &DiferenciaError{http.StatusServiceUnavailable, fmt.Sprintf("Error while connecting to Primary site (%s) with %s", primaryFullURL, err.Error())}
@@ -125,7 +131,7 @@ func Diferencia(r *http.Request) (bool, error) {
 	// Get candidate
 	candidateFullURL := CreateUrl(*r.URL, Config.Candidate)
 	log.Debug("Forwarding call to %s", candidateFullURL)
-	candidateBodyContent, candidateStatus, _, err := getContent(r, candidateFullURL)
+	candidateBodyContent, candidateStatus, candidateHeader, err := getContent(r, candidateFullURL)
 	if err != nil {
 		log.Error("Error while connecting to Candidate site (%s) with %s", candidateFullURL, err.Error())
 		return false, &DiferenciaError{http.StatusServiceUnavailable, fmt.Sprintf("Error while connecting to Candidate site (%s) with %s", candidateFullURL, err.Error())}
@@ -158,14 +164,14 @@ func Diferencia(r *http.Request) (bool, error) {
 			}
 			primaryWithoutNoise, candidateWithoutNoise, err := noiseOperation.Remove(primaryBodyContent, candidateBodyContent)
 
-			result = compareResult(candidateWithoutNoise, primaryWithoutNoise, candidateStatus, primaryStatus)
+			result = compareResult(candidateWithoutNoise, primaryWithoutNoise, candidateStatus, primaryStatus, candidateHeader, primaryHeader)
 		} else {
 			log.Error("Status code between %s(%d) and %s(%d) are different", primaryFullURL, primaryStatus, secondaryFullURL, secondaryStatus)
 			return false, &DiferenciaError{http.StatusBadRequest, fmt.Sprintf("Status code between %s(%d) and %s(%d) are different", primaryFullURL, primaryStatus, secondaryFullURL, secondaryStatus)}
 		}
 	} else {
 		// Comparision without noise cancellation
-		result = compareResult(candidateBodyContent, primaryBodyContent, candidateStatus, primaryStatus)
+		result = compareResult(candidateBodyContent, primaryBodyContent, candidateStatus, primaryStatus, candidateHeader, primaryHeader)
 	}
 
 	if Config.IsStoreResultsSet() {
@@ -188,8 +194,14 @@ func Diferencia(r *http.Request) (bool, error) {
 
 }
 
-func compareResult(candidate, primary []byte, candidateStatus, primaryStatus int) bool {
+func compareResult(candidate, primary []byte, candidateStatus, primaryStatus int, candidateHeader, primaryHeader http.Header) bool {
+	// TODO This method should be refactored to a chain of responsibility pattern
 	if primaryStatus == candidateStatus {
+		if Config.Headers {
+			if !header.CompareHeaders(candidateHeader, primaryHeader, Config.IgnoreHeadersValues...) {
+				return false
+			}
+		}
 		// Comparision between documents without noise
 		return json.CompareDocuments(candidate, primary, Config.DifferenceMode.String())
 	}

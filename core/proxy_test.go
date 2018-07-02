@@ -13,6 +13,7 @@ import (
 )
 
 type StubHttpClient struct {
+	header  []http.Header
 	content []string
 	status  []int
 	index   int
@@ -23,6 +24,9 @@ func (httpClient *StubHttpClient) MakeRequest(r *http.Request, url string) (*htt
 	buff := ioutil.NopCloser(strings.NewReader(httpClient.content[httpClient.index]))
 	response.Body = buff
 	response.StatusCode = httpClient.status[httpClient.index]
+	if httpClient.header != nil {
+		response.Header = httpClient.header[httpClient.index]
+	}
 	httpClient.index += 1
 	return response, nil
 }
@@ -30,7 +34,7 @@ func (httpClient *StubHttpClient) MakeRequest(r *http.Request, url string) (*htt
 var _ = Describe("Proxy", func() {
 
 	Describe("Run Diferencia", func() {
-		Context("With no noise reduction", func() {
+		Context("Without noise reduction", func() {
 			It("should return true if both documents are equal", func() {
 
 				// Given
@@ -208,6 +212,91 @@ var _ = Describe("Proxy", func() {
 				Expect(err).Should(HaveOccurred())
 			})
 		})
+		Context("With Headers check", func() {
+			It("should return true if both documents and headers are equal", func() {
+				// Given
+				var httpClient = &StubHttpClient{}
+				// Record Http Client responses
+				recordContent(httpClient, "test_fixtures/document-a.json", "test_fixtures/document-a.json")
+				recordStatus(httpClient, 200, 200)
+				headerA := http.Header{}
+				headerA["Accept"] = []string{"text/html"}
+
+				headerB := http.Header{}
+				headerB["Accept"] = []string{"text/html"}
+				recordHeader(httpClient, headerA, headerB)
+				core.HttpClient = httpClient
+
+				// Prepare Configuration object
+				conf := &core.DiferenciaConfiguration{
+					Port:                  8080,
+					Primary:               "http://now.httpbin.org/",
+					Secondary:             "http://now.httpbin.org/",
+					Candidate:             "http://now.httpbin.org/",
+					StoreResults:          "",
+					DifferenceMode:        core.Strict,
+					NoiseDetection:        false,
+					AllowUnsafeOperations: false,
+					Headers:               true,
+				}
+				core.Config = conf
+
+				// Create stubbed http.Request object
+				url, _ := url.Parse("http://localhost:8080")
+				request := createRequest(http.MethodGet, url)
+
+				// When
+
+				result, err := core.Diferencia(&request)
+
+				//Then
+
+				Expect(result).Should(Equal(true))
+				Expect(err).Should(Succeed())
+			})
+
+			It("should return false if documents is equal but not headers", func() {
+				// Given
+				var httpClient = &StubHttpClient{}
+				// Record Http Client responses
+				recordContent(httpClient, "test_fixtures/document-a.json", "test_fixtures/document-a.json")
+				recordStatus(httpClient, 200, 200)
+				headerA := http.Header{}
+				headerA["Accept"] = []string{"text/html"}
+
+				headerB := http.Header{}
+				headerB["Accept"] = []string{"text/plain"}
+				recordHeader(httpClient, headerA, headerB)
+				core.HttpClient = httpClient
+
+				// Prepare Configuration object
+				conf := &core.DiferenciaConfiguration{
+					Port:                  8080,
+					Primary:               "http://now.httpbin.org/",
+					Secondary:             "http://now.httpbin.org/",
+					Candidate:             "http://now.httpbin.org/",
+					StoreResults:          "",
+					DifferenceMode:        core.Strict,
+					NoiseDetection:        false,
+					AllowUnsafeOperations: false,
+					Headers:               true,
+				}
+				core.Config = conf
+
+				// Create stubbed http.Request object
+				url, _ := url.Parse("http://localhost:8080")
+				request := createRequest(http.MethodGet, url)
+
+				// When
+
+				result, err := core.Diferencia(&request)
+
+				//Then
+
+				Expect(result).Should(Equal(false))
+				Expect(err).Should(Succeed())
+			})
+		})
 	})
 })
 
@@ -217,6 +306,15 @@ func createRequest(method string, url *url.URL) http.Request {
 	request.Method = method
 
 	return request
+}
+
+func recordHeader(httpClient *StubHttpClient, headers ...http.Header) {
+	var header []http.Header
+
+	for _, v := range headers {
+		header = append(header, v)
+	}
+	httpClient.header = header
 }
 
 func recordStatus(httpClient *StubHttpClient, statusCode ...int) {
