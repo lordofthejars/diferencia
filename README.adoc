@@ -1,0 +1,21 @@
+= Diferencia
+
+image::https://travis-ci.org/lordofthejars/diferencia.svg?branch=master["Build Status", link="https://travis-ci.org/lordofthejars/diferencia"]
+
+When building a service-based architecture where each service might be deployed independently, it is important to validate that the new version of the service is still compatible with the old version and this new version is able to *produce* a response that it is still processable by any *consumer*.
+
+One way of resolving this problem is by using contracts and contract testing.
+You define a contract (or agreement) on how the API should look like to communicate between *consumer* and *provider* services, so when a new version of the service (either consumer or provider) is released, you check it meets the contract.
+If not then you know that something has been broken, and you need to fix it before you release the service.
+One of these libraries for writing contract tests is https://docs.pact.io/[Pact].
+
+But contract tests are not infallible, and in our experience, there are some drawbacks that might occur.
+
+* You can implement a new service endpoint but not defining it in the contract. Since contract does not know about its existence, this endpoint is never validated by contract test.
+* If you have already implemented several services, then it is really painful to start writing contracts for already developed services that you know that they are working. So usually you end up by validating this manually.
+* In our experience, contract tests are not widely adopted and companies rely on manual testing to validate that services can communicate with each other without any problem.
+
+In this sense, Diferencia helps you in mitigating these problems.
+Obviously, the best approach would be _contract tests + Diferencia_, but if you cannot do contract tests or you are into manual testing for validating compatibility between services, then definitely Diferencia is your tool.
+
+Full Docs can be read at https://lordofthejars.github.io/diferencia-docs-site
