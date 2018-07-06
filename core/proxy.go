@@ -1,9 +1,11 @@
 package core
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/lordofthejars/diferencia/difference/header"
@@ -76,11 +78,23 @@ type DiferenciaConfiguration struct {
 	PrometheusPort                int
 	Headers                       bool
 	IgnoreHeadersValues           []string
+	IgnoreValues                  []string
+	IgnoreValuesFile              string
 }
 
 // IsStoreResultsSet in configuration object
 func (conf DiferenciaConfiguration) IsStoreResultsSet() bool {
 	return len(conf.StoreResults) > 0
+}
+
+// IsIgnoreValuesSet in configuration object
+func (conf DiferenciaConfiguration) IsIgnoreValuesSet() bool {
+	return conf.IgnoreValues != nil && len(conf.IgnoreValues) > 0
+}
+
+// IsIgnoreValuesFileSet in configuration object
+func (conf DiferenciaConfiguration) IsIgnoreValuesFileSet() bool {
+	return len(conf.IgnoreValuesFile) > 0
 }
 
 // Print configuration
@@ -93,6 +107,8 @@ func (conf DiferenciaConfiguration) Print() {
 	fmt.Printf("Store Results: %s\n", conf.StoreResults)
 	fmt.Printf("Difference Mode: %s\n", conf.DifferenceMode.String())
 	fmt.Printf("Noise Detection: %t\n", conf.NoiseDetection)
+	fmt.Printf("Ignore Values of: %v\n", conf.IgnoreValues)
+	fmt.Printf("Ignore Values File: %s\n", conf.IgnoreValuesFile)
 	fmt.Printf("Headers: %t\n", conf.Headers)
 	fmt.Printf("Ignored Headers Values of: %v\n", conf.IgnoreHeadersValues)
 	fmt.Printf("Allow Unsafe Operations: %t\n", conf.AllowUnsafeOperations)
@@ -157,6 +173,8 @@ func Diferencia(r *http.Request) (bool, error) {
 		// What to do in case of two identical status code but no body content (404) might be still valid since you are testing that nothing is there
 		if primaryStatus == secondaryStatus {
 			noiseOperation := json.NoiseOperation{}
+			manualNoise := manualNoiseDetection()
+			noiseOperation.Initialize(manualNoise)
 			err := noiseOperation.Detect(primaryBodyContent, secondaryBodyContent)
 			if err != nil {
 				log.Error("Error detecting noise between %s and %s. (%s)", primaryFullURL, secondaryFullURL, err.Error())
@@ -192,6 +210,48 @@ func Diferencia(r *http.Request) (bool, error) {
 
 	return result, nil
 
+}
+
+func manualNoiseDetection() []string {
+	var pointers []string
+
+	if Config.IsIgnoreValuesSet() {
+		for _, v := range Config.IgnoreValues {
+			pointers = append(pointers, v)
+		}
+	}
+
+	if Config.IsIgnoreValuesFileSet() {
+
+		lines, err := readLines(Config.IgnoreValuesFile)
+
+		if err != nil {
+			log.Error("Error reading %s that defines ignoring values. %s. Execution will continue ignoring this file.", Config.IgnoreValuesFile, err)
+			return pointers
+		}
+
+		for _, v := range lines {
+			pointers = append(pointers, string(v))
+		}
+
+	}
+
+	return pointers
+}
+
+func readLines(path string) ([]string, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var lines []string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+	return lines, scanner.Err()
 }
 
 func compareResult(candidate, primary []byte, candidateStatus, primaryStatus int, candidateHeader, primaryHeader http.Header) bool {

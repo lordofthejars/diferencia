@@ -13,6 +13,17 @@ type NoiseOperation struct {
 	Patch []jsonpatch.JsonPatchOperation
 }
 
+// Initialize with some json pointers
+func (nd *NoiseOperation) Initialize(pointers []string) {
+
+	for _, v := range pointers {
+		patch := jsonpatch.NewPatch("replace", v, 0)
+		nd.Patch = append(nd.Patch, patch)
+	}
+
+}
+
+// ContainsNoise method
 func (nd NoiseOperation) ContainsNoise() bool {
 	return len(nd.Patch) > 0
 }
@@ -32,7 +43,10 @@ func (nd *NoiseOperation) Detect(primary, secondary []byte) error {
 		return err
 	}
 
-	nd.Patch = newPatch
+	for _, v := range newPatch {
+		nd.Patch = append(nd.Patch, v)
+	}
+
 	return nil
 
 }
