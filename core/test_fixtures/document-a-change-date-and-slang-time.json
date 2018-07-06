@@ -1,0 +1,16 @@
+{
+    "now": {
+        "epoch": 1529329505.8309507,
+        "slang_date": "today",
+        "slang_time": "yesterday",
+        "iso8601": "2018-06-18T13:45:05.830951Z",
+        "rfc2822": "Mon, 18 Jun 2018 13:45:05 GMT",
+        "rfc3339": "2018-06-18T13:45:05.83Z"
+    },
+    "urls": [
+        "/",
+        "/docs",
+        "/when/:human-timestamp",
+        "/parse/:machine-timestamp"
+    ]
+}

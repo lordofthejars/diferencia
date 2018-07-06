@@ -174,6 +174,77 @@ var _ = Describe("Proxy", func() {
 				Expect(result).Should(Equal(true))
 				Expect(err).Should(Succeed())
 			})
+
+			It("should return true if both documents are same but with different values not detected by automatic noise reduction but by manual", func() {
+
+				// Given
+				var httpClient = &StubHttpClient{}
+				// Record Http Client responses
+				recordContent(httpClient, "test_fixtures/document-a.json", "test_fixtures/document-a-change-date-and-slang-time.json", "test_fixtures/document-a-change-date.json")
+				recordStatus(httpClient, 200, 200, 200)
+				core.HttpClient = httpClient
+
+				// Prepare Configuration object
+				conf := &core.DiferenciaConfiguration{
+					Port:                  8080,
+					Primary:               "http://now.httpbin.org/",
+					Secondary:             "http://now.httpbin.org/",
+					Candidate:             "http://now.httpbin.org/",
+					StoreResults:          "",
+					DifferenceMode:        core.Strict,
+					NoiseDetection:        true,
+					AllowUnsafeOperations: false,
+					IgnoreValues:          []string{"/now/slang_time"},
+				}
+				core.Config = conf
+
+				// Create stubbed http.Request object
+				url, _ := url.Parse("http://localhost:8080")
+				request := createRequest(http.MethodGet, url)
+
+				// When
+				result, err := core.Diferencia(&request)
+
+				//Then
+
+				Expect(result).Should(Equal(true))
+				Expect(err).Should(Succeed())
+			})
+			It("should return true if both documents are same but with different values not detected by automatic noise reduction but by manual file", func() {
+
+				// Given
+				var httpClient = &StubHttpClient{}
+				// Record Http Client responses
+				recordContent(httpClient, "test_fixtures/document-a.json", "test_fixtures/document-a-change-date-and-slang-time.json", "test_fixtures/document-a-change-date.json")
+				recordStatus(httpClient, 200, 200, 200)
+				core.HttpClient = httpClient
+
+				// Prepare Configuration object
+				conf := &core.DiferenciaConfiguration{
+					Port:                  8080,
+					Primary:               "http://now.httpbin.org/",
+					Secondary:             "http://now.httpbin.org/",
+					Candidate:             "http://now.httpbin.org/",
+					StoreResults:          "",
+					DifferenceMode:        core.Strict,
+					NoiseDetection:        true,
+					AllowUnsafeOperations: false,
+					IgnoreValuesFile:      "test_fixtures/manual_noise.txt",
+				}
+				core.Config = conf
+
+				// Create stubbed http.Request object
+				url, _ := url.Parse("http://localhost:8080")
+				request := createRequest(http.MethodGet, url)
+
+				// When
+				result, err := core.Diferencia(&request)
+
+				//Then
+
+				Expect(result).Should(Equal(true))
+				Expect(err).Should(Succeed())
+			})
 		})
 
 		Context("With incorrect configuration", func() {
@@ -212,6 +283,7 @@ var _ = Describe("Proxy", func() {
 				Expect(err).Should(HaveOccurred())
 			})
 		})
+
 		Context("With Headers check", func() {
 			It("should return true if both documents and headers are equal", func() {
 				// Given

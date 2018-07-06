@@ -132,6 +132,30 @@ Now just execute the same `curl` command as before.
 
 And now the response is totally different returning a `200 OK`.
 
+=== Manual Noise Cancellation
+
+Sometimes autoamtic noise cancellation is not enough.
+Usually this might happen when you have random values or when you know beforehand the fields that produces noise and you don't want any automatic detection to save some execution time (1 extra call).
+
+.About Random Values
+****
+Suppose that you have a service where one field is a random value from 0 to 9.
+It could happen that _primary_ and _secondary_ field contains the same value.
+In this case this would not be considered as noise.
+
+But then _candidate_ field could be a different number of the one calculated in _primary_ and _secondary_.
+In this case the request would be considered failed, since there were no noise detection algorithm applied, but you as a API designer knows that this field should be considered noise.
+****
+
+To avoid this problem, to flags are provided and they are enabled when `noisedetection (-n)` flag is enabled.
+These flags are `ignoreValues` and `ignoreValuesFile`.
+
+`ignoreValues`:: list (in CSV) of _JSON_ pointers of elements where their values should be ignored in comparision.
+
+`ignoreValuesFile`:: path of a file where each line is a _JSON_ pointer of element where their values should be ignored in comparision.
+
+IMPORTANT: You need to have noise detection enabled to be able to specify manual noise cancellation.
+
 [#configuration]
 == Configuration
 
@@ -165,7 +189,7 @@ In next table you can see all possible configuration arguments that you can pass
 
 |--noisedetection (-n)
 |Enable noise detection
-|Boolean
+|boolean
 |false
 
 |--difference (-d)
@@ -183,9 +207,19 @@ In next table you can see all possible configuration arguments that you can pass
 |CSV
 |
 
+|--ignoreValues
+|List of JSON Pointers of values that must be ignored for comparision purposes
+|CSV
+|
+
+|--ignoreValuesFile
+|File location where each line is a JSON pointers definition for ignoring values
+|File
+|
+
 |--unsafe (-u)
 |Allow none safe operations like PUT, POST, PATCH, ..
-|Boolean
+|boolean
 |false
 
 |--storeResults
@@ -205,6 +239,6 @@ In next table you can see all possible configuration arguments that you can pass
 
 |--prometheusPort
 |Prometheus endpoint mort
-|int
+|integer
 |8081
 |===

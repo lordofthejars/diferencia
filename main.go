@@ -24,6 +24,8 @@ func main() {
 	var prometheusPort int
 	var headers bool
 	var ignoreHeadersValues []string
+	var ignoreValuesOf []string
+	var ignoreValuesFile string
 
 	var cmdStart = &cobra.Command{
 		Use:   "start",
@@ -44,6 +46,8 @@ func main() {
 			config.IgnoreHeadersValues = ignoreHeadersValues
 			config.Prometheus = prometheus
 			config.PrometheusPort = prometheusPort
+			config.IgnoreValues = ignoreValuesOf
+			config.IgnoreValuesFile = ignoreValuesFile
 
 			differenceMode, err := core.NewDifference(difference)
 
@@ -54,10 +58,12 @@ func main() {
 			config.DifferenceMode = differenceMode
 
 			if noiseDetection && len(secondaryURL) == 0 {
-
 				log.Error("If Noise Detection is enabled, you need to provide a secondary URL as well")
 				os.Exit(1)
+			}
 
+			if !noiseDetection && (config.IsIgnoreValuesFileSet() || config.IsIgnoreValuesSet()) {
+				log.Info("ignoreValues or ignoreValuesFile attributes are set but noise detection is disabled, so they are going to be ignored.")
 			}
 
 			if len(config.ServiceName) == 0 {
@@ -80,7 +86,10 @@ func main() {
 	cmdStart.Flags().StringVar(&storeResults, "storeResults", "", "Directory where output is set. If not specified then nothing is stored. Useful for local development.")
 
 	cmdStart.Flags().BoolVar(&headers, "headers", false, "Enable Http headers comparision")
-	cmdStart.Flags().StringSliceVar(&ignoreHeadersValues, "ignoreHeadersValues", nil, "List of headers key where its value should be ignored for comparision purposes")
+	cmdStart.Flags().StringSliceVar(&ignoreHeadersValues, "ignoreHeadersValues", nil, "List of headers key where their value must be ignored for comparision purposes.")
+
+	cmdStart.Flags().StringSliceVar(&ignoreValuesOf, "ignoreValues", nil, "List of JSON Pointers of values that must be ignored for comparision purposes.")
+	cmdStart.Flags().StringVar(&ignoreValuesFile, "ignoreValuesFile", "", "File location where each line is a JSON pointers definition for ignoring values.")
 
 	cmdStart.Flags().BoolVar(&prometheus, "prometheus", false, "Enable Prometheus endpoint")
 	cmdStart.Flags().IntVar(&prometheusPort, "prometheusPort", 8081, "Prometheus port")

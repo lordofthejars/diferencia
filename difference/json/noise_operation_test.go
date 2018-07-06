@@ -25,7 +25,7 @@ var _ = Describe("Noise Operation", func() {
 				Expect(noiseOperation.Patch).Should(HaveLen(0))
 			})
 
-			It("should return noise operations with remove instead of replace", func() {
+			It("should return noise operations with replace", func() {
 				documentA := loadFromFile("test_fixtures/document-a.json")
 				documentB := loadFromFile("test_fixtures/document-a-change-date.json")
 
@@ -42,7 +42,7 @@ var _ = Describe("Noise Operation", func() {
 				Expect(noiseOperation.Patch).Should(ContainElement(jsonpatch.NewPatch("replace", "/now/rfc3339", 0)))
 			})
 
-			It("should return noise operations with remove instead of replace in arrays", func() {
+			It("should return noise operations with replace in arrays", func() {
 				documentA := loadFromFile("test_fixtures/document-a.json")
 				documentB := loadFromFile("test_fixtures/document-a-different-array.json")
 
@@ -66,6 +66,26 @@ var _ = Describe("Noise Operation", func() {
 
 				error := noiseOperation.Detect(documentA, documentB)
 				Expect(error).Should(HaveOccurred())
+			})
+		})
+
+		Context("Initial noise", func() {
+			It("should append manual noise to automatic noise", func() {
+				documentA := loadFromFile("test_fixtures/document-a.json")
+				documentB := loadFromFile("test_fixtures/document-a-change-date.json")
+
+				noiseOperation := json.NoiseOperation{}
+				noiseOperation.Initialize([]string{"/now/slang_time"})
+				error := noiseOperation.Detect(documentA, documentB)
+
+				Expect(error).Should(Succeed())
+				Expect(noiseOperation.Patch).Should(HaveLen(5))
+
+				Expect(noiseOperation.Patch).Should(ContainElement(jsonpatch.NewPatch("replace", "/now/epoch", 0)))
+				Expect(noiseOperation.Patch).Should(ContainElement(jsonpatch.NewPatch("replace", "/now/iso8601", 0)))
+				Expect(noiseOperation.Patch).Should(ContainElement(jsonpatch.NewPatch("replace", "/now/rfc2822", 0)))
+				Expect(noiseOperation.Patch).Should(ContainElement(jsonpatch.NewPatch("replace", "/now/rfc3339", 0)))
+				Expect(noiseOperation.Patch).Should(ContainElement(jsonpatch.NewPatch("replace", "/now/slang_time", 0)))
 			})
 		})
 	})
