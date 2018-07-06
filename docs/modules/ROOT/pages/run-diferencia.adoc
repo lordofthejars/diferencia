@@ -197,6 +197,11 @@ In next table you can see all possible configuration arguments that you can pass
 |Strict,Subset 
 |Strict
 
+|--logLevel (-l)
+|Set log level
+|debug, info, warn, error, fatal, panic 
+|error
+
 |--headers
 |Enable Http headers comparision
 |boolean

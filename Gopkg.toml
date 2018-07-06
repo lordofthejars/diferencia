@@ -25,10 +25,6 @@
 #   unused-packages = true
 
 [[constraint]]
-  name = "github.com/fatih/color"
-  version = "v1.6.0"
-
-[[constraint]]
   name = "github.com/spf13/cobra"
   version = "v0.0.3"
 
@@ -47,6 +43,10 @@
 [[constraint]]
   name = "github.com/prometheus/client_golang"
   revision = "d6a9817c4a"
+
+[[constraint]]
+  name = "github.com/sirupsen/logrus"
+  revision = "v1.0.5"
 
 # To automatically create a json patch doc
 [[constraint]]

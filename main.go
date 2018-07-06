@@ -26,6 +26,7 @@ func main() {
 	var ignoreHeadersValues []string
 	var ignoreValuesOf []string
 	var ignoreValuesFile string
+	var logLevel string
 
 	var cmdStart = &cobra.Command{
 		Use:   "start",
@@ -71,6 +72,8 @@ func main() {
 				config.ServiceName = candidateURL.Hostname()
 			}
 
+			log.Initialize(logLevel)
+
 			core.StartProxy(&config)
 		},
 	}
@@ -84,6 +87,8 @@ func main() {
 	cmdStart.Flags().BoolVarP(&allowUnsafeOperations, "unsafe", "u", false, "Allow none safe operations like PUT, POST, PATCH, ...")
 	cmdStart.Flags().BoolVarP(&noiseDetection, "noisedetection", "n", false, "Enable noise detection. Secondary URL must be provided.")
 	cmdStart.Flags().StringVar(&storeResults, "storeResults", "", "Directory where output is set. If not specified then nothing is stored. Useful for local development.")
+
+	cmdStart.Flags().StringVarP(&logLevel, "logLevel", "l", "error", "Set log level")
 
 	cmdStart.Flags().BoolVar(&headers, "headers", false, "Enable Http headers comparision")
 	cmdStart.Flags().StringSliceVar(&ignoreHeadersValues, "ignoreHeadersValues", nil, "List of headers key where their value must be ignored for comparision purposes.")
