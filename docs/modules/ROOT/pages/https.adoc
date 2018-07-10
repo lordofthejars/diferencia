@@ -10,4 +10,4 @@ Diferencia can be configured with next flags:
 `insecureSkipVerify`:: Sets Insecure Skip Verify flag in Http Client
 `caCert`:: Certificate Authority path (PEM)
 `clientCert`:: Client Certificate path (X509)
-`clientKey`:: Client Key path (X509)
+`clientKey`:: Client Key path (X509)V
