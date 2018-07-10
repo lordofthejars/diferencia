@@ -48,11 +48,13 @@ func NewDifference(difference string) (Difference, error) {
 	return -1, fmt.Errorf("Cannot find %s difference mode", difference)
 }
 
-// HttpClient interface to make requests with changed URL
-var HttpClient Client = &HTTPClient{}
-
 // Config object
 var Config *DiferenciaConfiguration
+
+// HttpClient interface to make requests with changed URL
+var HttpClient Client = &HTTPClient{
+	config: Config,
+}
 
 var prometheusCounter *prometheus.CounterVec
 
@@ -80,6 +82,10 @@ type DiferenciaConfiguration struct {
 	IgnoreHeadersValues           []string
 	IgnoreValues                  []string
 	IgnoreValuesFile              string
+	InsecureSkipVerify            bool
+	CaCert                        string
+	ClientCert                    string
+	ClientKey                     string
 }
 
 // IsStoreResultsSet in configuration object
@@ -97,6 +103,10 @@ func (conf DiferenciaConfiguration) IsIgnoreValuesFileSet() bool {
 	return len(conf.IgnoreValuesFile) > 0
 }
 
+func (conf DiferenciaConfiguration) AreHttpsClientParamsSet() bool {
+	return (len(conf.CaCert) > 0 && len(conf.ClientCert) > 0 && len(conf.ClientKey) > 0)
+}
+
 // Print configuration
 func (conf DiferenciaConfiguration) Print() {
 	fmt.Printf("Port: %d\n", conf.Port)
@@ -112,6 +122,10 @@ func (conf DiferenciaConfiguration) Print() {
 	fmt.Printf("Headers: %t\n", conf.Headers)
 	fmt.Printf("Ignored Headers Values of: %v\n", conf.IgnoreHeadersValues)
 	fmt.Printf("Allow Unsafe Operations: %t\n", conf.AllowUnsafeOperations)
+	fmt.Printf("Insecure Skip Verify Port: %t\n", conf.InsecureSkipVerify)
+	fmt.Printf("Ca Cert Path: %s\n", conf.CaCert)
+	fmt.Printf("Client Cert Path: %s\n", conf.ClientCert)
+	fmt.Printf("Client Key Path: %s\n", conf.ClientKey)
 	fmt.Printf("Prometheus Enabled: %t\n", conf.Prometheus)
 	fmt.Printf("Prometheus Port: %d\n", conf.PrometheusPort)
 }
