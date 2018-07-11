@@ -14,6 +14,10 @@ var rootCmd = &cobra.Command{
 	Short: "Interact with Diferencia",
 }
 
+func areHttpsClientAttributesCorrect(caCert, clientCert, clientKey string) bool {
+	return (len(caCert) == 0 && len(clientCert) == 0 && len(clientKey) == 0) || (len(caCert) > 0 && len(clientCert) > 0 && len(clientKey) > 0)
+}
+
 func main() {
 
 	var port int
@@ -27,6 +31,8 @@ func main() {
 	var ignoreValuesOf []string
 	var ignoreValuesFile string
 	var logLevel string
+	var insecureSkipVerify bool
+	var caCert, clientCert, clientKey string
 
 	var cmdStart = &cobra.Command{
 		Use:   "start",
@@ -49,6 +55,10 @@ func main() {
 			config.PrometheusPort = prometheusPort
 			config.IgnoreValues = ignoreValuesOf
 			config.IgnoreValuesFile = ignoreValuesFile
+			config.InsecureSkipVerify = insecureSkipVerify
+			config.CaCert = caCert
+			config.ClientCert = clientCert
+			config.ClientKey = clientKey
 
 			differenceMode, err := core.NewDifference(difference)
 
@@ -57,6 +67,11 @@ func main() {
 				os.Exit(1)
 			}
 			config.DifferenceMode = differenceMode
+
+			if !areHttpsClientAttributesCorrect(caCert, clientCert, clientKey) {
+				log.Error("Https Client options should either not provided or all of them provided but not only some. caCert: %s, clientCert: %s, clientkey: %s.", caCert, clientCert, clientKey)
+				os.Exit(1)
+			}
 
 			if noiseDetection && len(secondaryURL) == 0 {
 				log.Error("If Noise Detection is enabled, you need to provide a secondary URL as well")
@@ -98,6 +113,11 @@ func main() {
 
 	cmdStart.Flags().BoolVar(&prometheus, "prometheus", false, "Enable Prometheus endpoint")
 	cmdStart.Flags().IntVar(&prometheusPort, "prometheusPort", 8081, "Prometheus port")
+
+	cmdStart.Flags().BoolVar(&insecureSkipVerify, "insecureSkipVerify", false, "Sets Insecure Skip Verify flag in Http Client")
+	cmdStart.Flags().StringVar(&caCert, "caCert", "", "Certificate Authority path (PEM)")
+	cmdStart.Flags().StringVar(&clientCert, "clientCert", "", "Client Certificate path (X509)")
+	cmdStart.Flags().StringVar(&clientKey, "clientKey", "", "Client Key path (X509)")
 
 	cmdStart.MarkFlagRequired("primary")
 	cmdStart.MarkFlagRequired("candidate")
