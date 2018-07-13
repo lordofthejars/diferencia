@@ -2,10 +2,6 @@
 
 Diferencia is under development so currently only basic features are implemented, for next releases you can expect next additions:
 
-* Prometheus integration
 * Kubernetes integration
-* Https support
-* Better noise cancellation for random values
 * Dashboard
 * Changing dynamically configuration parameters so the proxy can be reused.
-* Move to Logrus
