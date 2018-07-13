@@ -1,7 +1,7 @@
 package log
 
 import (
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 // Initialize log level
@@ -9,38 +9,23 @@ func Initialize(level string) {
 
 	switch level {
 	case "debug":
-		log.SetLevel(log.DebugLevel)
+		logrus.SetLevel(logrus.DebugLevel)
 		break
 	case "info":
-		log.SetLevel(log.InfoLevel)
+		logrus.SetLevel(logrus.InfoLevel)
 		break
 	case "error":
-		log.SetLevel(log.ErrorLevel)
+		logrus.SetLevel(logrus.ErrorLevel)
 		break
 	case "warn":
-		log.SetLevel(log.WarnLevel)
+		logrus.SetLevel(logrus.WarnLevel)
 		break
 	case "fatal":
-		log.SetLevel(log.FatalLevel)
+		logrus.SetLevel(logrus.FatalLevel)
 		break
 	case "panic":
-		log.SetLevel(log.PanicLevel)
+		logrus.SetLevel(logrus.PanicLevel)
 		break
 	}
 
-}
-
-// Info level
-func Info(text string, arg ...interface{}) {
-	log.Infof(text, arg)
-}
-
-// Error level
-func Error(text string, arg ...interface{}) {
-	log.Errorf(text, arg)
-}
-
-// Debug level
-func Debug(text string, arg ...interface{}) {
-	log.Debugf(text, arg)
 }

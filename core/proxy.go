@@ -15,7 +15,7 @@ import (
 	"github.com/lordofthejars/diferencia/metrics"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/lordofthejars/diferencia/log"
+	"github.com/sirupsen/logrus"
 )
 
 // Difference algorithm
@@ -142,28 +142,28 @@ func (e *DiferenciaError) Error() string {
 func Diferencia(r *http.Request) (bool, error) {
 
 	if !Config.AllowUnsafeOperations && !isSafeOperation(r.Method) {
-		log.Debug("Unsafe operations are not allowed and %s method has been received", r.Method)
+		logrus.Debugf("Unsafe operations are not allowed and %s method has been received", r.Method)
 		return false, &DiferenciaError{http.StatusMethodNotAllowed, fmt.Sprintf("Unsafe operations are not allowed and %s method has been received", r.Method)}
 	}
 
-	log.Debug("URL %s is going to be processed", r.URL.String())
+	logrus.Debugf("URL %s is going to be processed", r.URL.String())
 
 	// TODO it can be parallelized
 	// Get request from primary
 	primaryFullURL := CreateUrl(*r.URL, Config.Primary)
-	log.Debug("Forwarding call to %s", primaryFullURL)
+	logrus.Debugf("Forwarding call to %s", primaryFullURL)
 	primaryBodyContent, primaryStatus, primaryHeader, err := getContent(r, primaryFullURL)
 	if err != nil {
-		log.Error("Error while connecting to Primary site (%s) with %s", primaryFullURL, err.Error())
+		logrus.Errorf("Error while connecting to Primary site (%s) with %s", primaryFullURL, err.Error())
 		return false, &DiferenciaError{http.StatusServiceUnavailable, fmt.Sprintf("Error while connecting to Primary site (%s) with %s", primaryFullURL, err.Error())}
 	}
 
 	// Get candidate
 	candidateFullURL := CreateUrl(*r.URL, Config.Candidate)
-	log.Debug("Forwarding call to %s", candidateFullURL)
+	logrus.Debugf("Forwarding call to %s", candidateFullURL)
 	candidateBodyContent, candidateStatus, candidateHeader, err := getContent(r, candidateFullURL)
 	if err != nil {
-		log.Error("Error while connecting to Candidate site (%s) with %s", candidateFullURL, err.Error())
+		logrus.Errorf("Error while connecting to Candidate site (%s) with %s", candidateFullURL, err.Error())
 		return false, &DiferenciaError{http.StatusServiceUnavailable, fmt.Sprintf("Error while connecting to Candidate site (%s) with %s", candidateFullURL, err.Error())}
 	}
 
@@ -176,10 +176,10 @@ func Diferencia(r *http.Request) (bool, error) {
 	if Config.NoiseDetection {
 		// Get secondary to do the noise cancellation
 		secondaryFullURL := CreateUrl(*r.URL, Config.Secondary)
-		log.Debug("Forwarding call to %s", secondaryFullURL)
+		logrus.Debugf("Forwarding call to %s", secondaryFullURL)
 		secondaryBodyContent, secondaryStatus, _, err := getContent(r, secondaryFullURL)
 		if err != nil {
-			log.Error("Error while connecting to Secondary site (%s) with error %s", candidateFullURL, err.Error())
+			logrus.Errorf("Error while connecting to Secondary site (%s) with error %s", candidateFullURL, err.Error())
 			return false, &DiferenciaError{http.StatusServiceUnavailable, fmt.Sprintf("Error while connecting to Secondary site (%s) with error %s", candidateFullURL, err.Error())}
 		}
 
@@ -191,14 +191,14 @@ func Diferencia(r *http.Request) (bool, error) {
 			noiseOperation.Initialize(manualNoise)
 			err := noiseOperation.Detect(primaryBodyContent, secondaryBodyContent)
 			if err != nil {
-				log.Error("Error detecting noise between %s and %s. (%s)", primaryFullURL, secondaryFullURL, err.Error())
+				logrus.Error("Error detecting noise between %s and %s. (%s)", primaryFullURL, secondaryFullURL, err.Error())
 				return false, &DiferenciaError{http.StatusBadRequest, fmt.Sprintf("Error detecting noise between %s and %s. (%s)", primaryFullURL, secondaryFullURL, err.Error())}
 			}
 			primaryWithoutNoise, candidateWithoutNoise, err := noiseOperation.Remove(primaryBodyContent, candidateBodyContent)
 
 			result = compareResult(candidateWithoutNoise, primaryWithoutNoise, candidateStatus, primaryStatus, candidateHeader, primaryHeader)
 		} else {
-			log.Error("Status code between %s(%d) and %s(%d) are different", primaryFullURL, primaryStatus, secondaryFullURL, secondaryStatus)
+			logrus.Errorf("Status code between %s(%d) and %s(%d) are different", primaryFullURL, primaryStatus, secondaryFullURL, secondaryStatus)
 			return false, &DiferenciaError{http.StatusBadRequest, fmt.Sprintf("Status code between %s(%d) and %s(%d) are different", primaryFullURL, primaryStatus, secondaryFullURL, secondaryStatus)}
 		}
 	} else {
@@ -220,7 +220,7 @@ func Diferencia(r *http.Request) (bool, error) {
 		exporter.ExportToFile(Config.StoreResults, interactions)
 	}
 
-	log.Debug("Result of comparing %s and %s is %t", primaryFullURL, candidateFullURL, result)
+	logrus.Debugf("Result of comparing %s and %s is %t", primaryFullURL, candidateFullURL, result)
 
 	return result, nil
 
@@ -240,7 +240,7 @@ func manualNoiseDetection() []string {
 		lines, err := readLines(Config.IgnoreValuesFile)
 
 		if err != nil {
-			log.Error("Error reading %s that defines ignoring values. %s. Execution will continue ignoring this file.", Config.IgnoreValuesFile, err)
+			logrus.Errorf("Error reading %s that defines ignoring values. %s. Execution will continue ignoring this file.", Config.IgnoreValuesFile, err)
 			return pointers
 		}
 
@@ -338,7 +338,7 @@ func StartProxy(configuration *DiferenciaConfiguration) {
 		proxyMux := http.NewServeMux()
 		// Matches everything
 		proxyMux.HandleFunc("/", diferenciaHandler)
-		log.Error("Error starting proxy: %s", http.ListenAndServe(":"+strconv.Itoa(Config.Port), proxyMux))
+		logrus.Errorf("Error starting proxy: %s", http.ListenAndServe(":"+strconv.Itoa(Config.Port), proxyMux))
 	}()
 
 	go func() {
@@ -346,7 +346,7 @@ func StartProxy(configuration *DiferenciaConfiguration) {
 			//Initialize Prometheus endpoint
 			prometheusMux := http.NewServeMux()
 			prometheusMux.Handle("/metrics", prometheus.Handler())
-			log.Error("Error starting prometheus endpoint: %s", http.ListenAndServe(":"+strconv.Itoa(Config.PrometheusPort), prometheusMux))
+			logrus.Errorf("Error starting prometheus endpoint: %s", http.ListenAndServe(":"+strconv.Itoa(Config.PrometheusPort), prometheusMux))
 		}
 	}()
 

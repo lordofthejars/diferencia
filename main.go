@@ -6,6 +6,7 @@ import (
 
 	"github.com/lordofthejars/diferencia/core"
 	"github.com/lordofthejars/diferencia/log"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -63,23 +64,23 @@ func main() {
 			differenceMode, err := core.NewDifference(difference)
 
 			if err != nil {
-				log.Error("Error while setting difference mode. %s", err.Error())
+				logrus.Errorf("Error while setting difference mode. %s", err.Error())
 				os.Exit(1)
 			}
 			config.DifferenceMode = differenceMode
 
 			if !areHttpsClientAttributesCorrect(caCert, clientCert, clientKey) {
-				log.Error("Https Client options should either not provided or all of them provided but not only some. caCert: %s, clientCert: %s, clientkey: %s.", caCert, clientCert, clientKey)
+				logrus.Errorf("Https Client options should either not provided or all of them provided but not only some. caCert: %s, clientCert: %s, clientkey: %s.", caCert, clientCert, clientKey)
 				os.Exit(1)
 			}
 
 			if noiseDetection && len(secondaryURL) == 0 {
-				log.Error("If Noise Detection is enabled, you need to provide a secondary URL as well")
+				logrus.Errorf("If Noise Detection is enabled, you need to provide a secondary URL as well")
 				os.Exit(1)
 			}
 
 			if !noiseDetection && (config.IsIgnoreValuesFileSet() || config.IsIgnoreValuesSet()) {
-				log.Info("ignoreValues or ignoreValuesFile attributes are set but noise detection is disabled, so they are going to be ignored.")
+				logrus.Infof("ignoreValues or ignoreValuesFile attributes are set but noise detection is disabled, so they are going to be ignored.")
 			}
 
 			if len(config.ServiceName) == 0 {
@@ -88,7 +89,6 @@ func main() {
 			}
 
 			log.Initialize(logLevel)
-
 			core.StartProxy(&config)
 		},
 	}
@@ -125,7 +125,7 @@ func main() {
 	rootCmd.AddCommand(cmdStart)
 
 	if err := rootCmd.Execute(); err != nil {
-		log.Error(err.Error())
+		logrus.Errorf(err.Error())
 		os.Exit(1)
 	}
 
