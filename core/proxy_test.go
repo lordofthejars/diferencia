@@ -33,6 +33,134 @@ func (httpClient *StubHttpClient) MakeRequest(r *http.Request, url string) (*htt
 
 var _ = Describe("Proxy", func() {
 
+	Describe("Update Configuration", func() {
+		Context("Update fields ", func() {
+			It("should update noise detection", func() {
+
+				// Given
+
+				// Prepare Configuration object
+				conf := &core.DiferenciaConfiguration{
+					Port:                  8080,
+					Primary:               "http://now.httpbin.org/",
+					Candidate:             "http://now.httpbin.org/",
+					StoreResults:          "",
+					DifferenceMode:        core.Strict,
+					NoiseDetection:        false,
+					AllowUnsafeOperations: false,
+				}
+				core.Config = conf
+
+				updateConf := core.DiferenciaConfigurationUpdate{
+					NoiseDetection: "true",
+				}
+
+				// When
+
+				core.Config.UpdateConfiguration(updateConf)
+
+				// Then
+
+				Expect(core.Config.NoiseDetection).Should(Equal(true))
+			})
+
+			It("should update primary, secondary and candidate", func() {
+
+				// Given
+
+				// Prepare Configuration object
+				conf := &core.DiferenciaConfiguration{
+					Port:                  8080,
+					Primary:               "http://now.httpbin.org/",
+					Candidate:             "http://now.httpbin.org/",
+					Secondary:             "http://now.httpbin.org/",
+					StoreResults:          "",
+					DifferenceMode:        core.Strict,
+					NoiseDetection:        false,
+					AllowUnsafeOperations: false,
+				}
+				core.Config = conf
+
+				updateConf := core.DiferenciaConfigurationUpdate{
+					Primary:   "http://localhost",
+					Secondary: "http://localhost",
+					Candidate: "http://localhost",
+				}
+
+				// When
+
+				core.Config.UpdateConfiguration(updateConf)
+
+				// Then
+
+				Expect(core.Config.Primary).Should(Equal("http://localhost"))
+				Expect(core.Config.Secondary).Should(Equal("http://localhost"))
+				Expect(core.Config.Candidate).Should(Equal("http://localhost"))
+				Expect(core.Config.GetServiceName()).Should(Equal("localhost"))
+			})
+
+			It("should fail if incorrect mode", func() {
+
+				// Given
+
+				// Prepare Configuration object
+				conf := &core.DiferenciaConfiguration{
+					Port:                  8080,
+					Primary:               "http://now.httpbin.org/",
+					Candidate:             "http://now.httpbin.org/",
+					Secondary:             "http://now.httpbin.org/",
+					StoreResults:          "",
+					DifferenceMode:        core.Strict,
+					NoiseDetection:        false,
+					AllowUnsafeOperations: false,
+				}
+				core.Config = conf
+
+				updateConf := core.DiferenciaConfigurationUpdate{
+					Mode: "incorrect",
+				}
+
+				// When
+
+				err := core.Config.UpdateConfiguration(updateConf)
+
+				// Then
+
+				Expect(err).Should(HaveOccurred())
+			})
+
+			It("should fail if noise detection is not a boolean", func() {
+
+				// Given
+
+				// Prepare Configuration object
+				conf := &core.DiferenciaConfiguration{
+					Port:                  8080,
+					Primary:               "http://now.httpbin.org/",
+					Candidate:             "http://now.httpbin.org/",
+					Secondary:             "http://now.httpbin.org/",
+					StoreResults:          "",
+					DifferenceMode:        core.Strict,
+					NoiseDetection:        false,
+					AllowUnsafeOperations: false,
+				}
+				core.Config = conf
+
+				updateConf := core.DiferenciaConfigurationUpdate{
+					NoiseDetection: "incorrect",
+				}
+
+				// When
+
+				err := core.Config.UpdateConfiguration(updateConf)
+
+				// Then
+
+				Expect(err).Should(HaveOccurred())
+			})
+		})
+	})
+
 	Describe("Run Diferencia", func() {
 		Context("Without noise reduction", func() {
 			It("should return true if both documents are equal", func() {

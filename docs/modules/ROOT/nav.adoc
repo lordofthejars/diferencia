@@ -19,4 +19,7 @@
 ** xref:prometheus.adoc[Prometheus]
 ** xref:run-diferencia.adoc#configuration[Configuration]
 
+* Administration Console
+** xref:admin.adoc#admin-api[API]
+
 * xref:what_next.adoc[What's Next]

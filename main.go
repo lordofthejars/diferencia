@@ -1,7 +1,6 @@
 package main
 
 import (
-	"net/url"
 	"os"
 
 	"github.com/lordofthejars/diferencia/core"
@@ -35,6 +34,8 @@ func main() {
 	var insecureSkipVerify bool
 	var caCert, clientCert, clientKey string
 
+	var adminPort int
+
 	var cmdStart = &cobra.Command{
 		Use:   "start",
 		Short: "Start Diferencia",
@@ -43,7 +44,6 @@ func main() {
 			config := core.DiferenciaConfiguration{}
 
 			config.Port = port
-			config.ServiceName = serviceName
 			config.Primary = primaryURL
 			config.Secondary = secondaryURL
 			config.Candidate = candidateURL
@@ -60,6 +60,7 @@ func main() {
 			config.CaCert = caCert
 			config.ClientCert = clientCert
 			config.ClientKey = clientKey
+			config.AdminPort = adminPort
 
 			differenceMode, err := core.NewDifference(difference)
 
@@ -83,10 +84,7 @@ func main() {
 				logrus.Infof("ignoreValues or ignoreValuesFile attributes are set but noise detection is disabled, so they are going to be ignored.")
 			}
 
-			if len(config.ServiceName) == 0 {
-				candidateURL, _ := url.Parse(config.Candidate)
-				config.ServiceName = candidateURL.Hostname()
-			}
+			config.SetServiceName(serviceName)
 
 			log.Initialize(logLevel)
 			core.StartProxy(&config)
@@ -113,6 +111,8 @@ func main() {
 
 	cmdStart.Flags().BoolVar(&prometheus, "prometheus", false, "Enable Prometheus endpoint")
 	cmdStart.Flags().IntVar(&prometheusPort, "prometheusPort", 8081, "Prometheus port")
+
+	cmdStart.Flags().IntVar(&adminPort, "adminPort", 8082, "Admin port")
 
 	cmdStart.Flags().BoolVar(&insecureSkipVerify, "insecureSkipVerify", false, "Sets Insecure Skip Verify flag in Http Client")
 	cmdStart.Flags().StringVar(&caCert, "caCert", "", "Certificate Authority path (PEM)")

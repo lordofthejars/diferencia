@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 
@@ -70,7 +71,7 @@ const (
 // DiferenciaConfiguration object
 type DiferenciaConfiguration struct {
 	Port                          int
-	ServiceName                   string
+	serviceName                   string
 	Primary, Secondary, Candidate string
 	StoreResults                  string
 	DifferenceMode                Difference
@@ -86,6 +87,70 @@ type DiferenciaConfiguration struct {
 	CaCert                        string
 	ClientCert                    string
 	ClientKey                     string
+	AdminPort                     int
+}
+
+// UpdateConfiguration with configured params
+func (conf *DiferenciaConfiguration) UpdateConfiguration(updateConfig DiferenciaConfigurationUpdate) error {
+
+	if updateConfig.isServiceNameSet() {
+		conf.SetServiceName(updateConfig.ServiceName)
+		prometheusCounter = metrics.RegisterNumberOfRegressions(Config.serviceName)
+	}
+
+	if updateConfig.isPrimarySet() {
+		conf.Primary = updateConfig.Primary
+	}
+
+	if updateConfig.isSecondarySet() {
+		conf.Secondary = updateConfig.Secondary
+	}
+
+	if updateConfig.isCandidateSet() {
+		conf.Candidate = updateConfig.Candidate
+		// Updates service name for new candidate in case of service name not set
+		if !updateConfig.isServiceNameSet() {
+			conf.SetServiceName(updateConfig.ServiceName)
+			prometheusCounter = metrics.RegisterNumberOfRegressions(Config.serviceName)
+		}
+	}
+
+	if updateConfig.isModeSet() {
+		mode, err := updateConfig.getMode()
+
+		if err != nil {
+			return err
+		}
+
+		conf.DifferenceMode = mode
+	}
+
+	if updateConfig.isNoiseDetectionSet() {
+		noise, err := updateConfig.getNoiseDetection()
+
+		if err != nil {
+			return err
+		}
+
+		conf.NoiseDetection = noise
+
+	}
+
+	return nil
+}
+
+func (conf DiferenciaConfiguration) GetServiceName() string {
+	return conf.serviceName
+}
+
+// SetServiceName and case of empty it calculates from candidate
+func (conf *DiferenciaConfiguration) SetServiceName(serviceName string) {
+
+	if len(serviceName) == 0 {
+		candidateURL, _ := url.Parse(conf.Candidate)
+		conf.serviceName = candidateURL.Hostname()
+	}
+
 }
 
 // IsStoreResultsSet in configuration object
@@ -103,6 +168,7 @@ func (conf DiferenciaConfiguration) IsIgnoreValuesFileSet() bool {
 	return len(conf.IgnoreValuesFile) > 0
 }
 
+// AreHttpsClientParamsSet checking if https is enabled
 func (conf DiferenciaConfiguration) AreHttpsClientParamsSet() bool {
 	return (len(conf.CaCert) > 0 && len(conf.ClientCert) > 0 && len(conf.ClientKey) > 0)
 }
@@ -110,7 +176,7 @@ func (conf DiferenciaConfiguration) AreHttpsClientParamsSet() bool {
 // Print configuration
 func (conf DiferenciaConfiguration) Print() {
 	fmt.Printf("Port: %d\n", conf.Port)
-	fmt.Printf("Service Name: %s\n", conf.ServiceName)
+	fmt.Printf("Service Name: %s\n", conf.serviceName)
 	fmt.Printf("Primary: %s\n", conf.Primary)
 	fmt.Printf("Secondary: %s\n", conf.Secondary)
 	fmt.Printf("Candidate: %s\n", conf.Candidate)
@@ -128,6 +194,7 @@ func (conf DiferenciaConfiguration) Print() {
 	fmt.Printf("Client Key Path: %s\n", conf.ClientKey)
 	fmt.Printf("Prometheus Enabled: %t\n", conf.Prometheus)
 	fmt.Printf("Prometheus Port: %d\n", conf.PrometheusPort)
+	fmt.Printf("Admin Port %d\n", conf.AdminPort)
 }
 
 type DiferenciaError struct {
@@ -284,6 +351,9 @@ func compareResult(candidate, primary []byte, candidateStatus, primaryStatus int
 
 func diferenciaHandler(w http.ResponseWriter, r *http.Request) {
 
+	mutex.Lock()
+	defer mutex.Unlock()
+
 	result, err := Diferencia(r)
 	if err != nil {
 		if de, ok := err.(*DiferenciaError); ok {
@@ -350,6 +420,13 @@ func StartProxy(configuration *DiferenciaConfiguration) {
 		}
 	}()
 
+	go func() {
+		// Initialize Admin server
+		adminMux := http.NewServeMux()
+		adminMux.HandleFunc("/configuration", adminHandler)
+		logrus.Errorf("Error starting admin: %s", http.ListenAndServe(":"+strconv.Itoa(Config.AdminPort), adminMux))
+	}()
+
 	<-finish
 }
 
@@ -360,7 +437,7 @@ func initialize() {
 
 	//Initialize Prometheus if required
 	if Config.Prometheus {
-		prometheusCounter = metrics.RegisterNumberOfRegressions(Config.ServiceName)
+		prometheusCounter = metrics.RegisterNumberOfRegressions(Config.serviceName)
 	}
 
 }
