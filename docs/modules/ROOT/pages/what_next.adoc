@@ -4,4 +4,4 @@ Diferencia is under development so currently only basic features are implemented
 
 * Kubernetes integration
 * Dashboard
-* Changing dynamically configuration parameters so the proxy can be reused.
+* Schema comparision

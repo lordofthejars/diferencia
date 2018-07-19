@@ -1,0 +1,41 @@
+= Administration Console
+include::_attributes.adoc[]
+
+[#admin-api]
+== Rest API
+
+Diferencia has an administration console that can be accessed as a Rest API to configure some of the Diferencia parameters without having to restart it.
+At this time these parameters are:
+
+* serviceName
+* primary
+* candidate
+* secondary
+* noise detection
+* mode
+
+By default the admin console is listening port `8082` but it can be configured by using `--adminPort` argument.
+
+To update any of the parameters you only need to send a JSON document using `PUT` http method to `/configuration` endpoint to given host and configured port.
+
+The JSON document must follow next schema:
+
+[source, json]
+----
+{
+  "serviceName" : "",
+  "primary" : "",
+  "secondary" : "",
+  "candidate" : "",
+  "secondary" : "",
+  "noiseDetection" : "", // <1>
+  "mode" : "" // <2>
+}
+----
+<1> Noise Detection valid values is: `Strict`, `Subset` and `Schema`
+<2> Boolean as string `true` or `false`
+
+TIP: You can set all parameters to be updated in the document, and all of them will be updated at once. It is not necessary to send N requests one for each change.
+
+.Update Noise Cancellation with Insomnia
+image::confupdate.png[]

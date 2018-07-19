@@ -243,7 +243,12 @@ In next table you can see all possible configuration arguments that you can pass
 |false
 
 |--prometheusPort
-|Prometheus endpoint mort
+|Prometheus endpoint port
 |integer
 |8081
+
+|--adminPort
+|Admin endpointport
+|integer
+|8082
 |===
