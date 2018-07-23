@@ -35,6 +35,11 @@ By default Diferencia just skip any unsafe operation like `PUT`, `POST`, `DELETE
 You can remove this restriction by starting Diferencia with `--unsafe` flag.
 ====
 
+[TIP]
+====
+Diferencia has an endpoint at `/healthdif` that can be used to check when diferencia is ready to receive requests.
+====
+
 [#modes]
 == Running Modes
 
