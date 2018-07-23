@@ -12,7 +12,7 @@ Assumptions:
 
 To start diferencia you only need to run next command from your terminal:
 
-`~$ diferencia start -c http://rest.ensembl.org -p http://rest.ensembl.org`
+`diferencia start -c http://rest.ensembl.org -p http://rest.ensembl.org`
 
 This command just starts Diferencia proxy, configuring it to use http://rest.ensembl.org (`-p`) as the primary (_old version_) and http://rest.ensembl.org (`-c`) as the candidate (_new version_).
 

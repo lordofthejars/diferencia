@@ -11,6 +11,7 @@ But contract tests are not infallible, and in our experience, there are some dra
 
 * You can implement a new service endpoint but not defining it in the contract. Since contract does not know about its existence, this endpoint is never validated by contract test.
 * If you have already implemented several services, then it is really painful to start writing contracts for already developed services that you know that they are working. So usually you end up by validating this manually.
+* You can use Swagger files to validate services, but you ar ejust validating the current version of the service, but not if you are back-breaking any compatibility.
 * In our experience, contract tests are not widely adopted and companies rely on manual testing to validate that services can communicate with each other without any problem.
 
 In this sense, Diferencia helps you in mitigating these problems.
