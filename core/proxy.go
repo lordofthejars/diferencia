@@ -349,6 +349,11 @@ func compareResult(candidate, primary []byte, candidateStatus, primaryStatus int
 	return false
 }
 
+func healthHandler(w http.ResponseWriter, r *http.Request) {
+	// If this handler is up and running means that Proxy can start dealing with requests
+	w.WriteHeader(http.StatusOK)
+}
+
 func diferenciaHandler(w http.ResponseWriter, r *http.Request) {
 
 	mutex.Lock()
@@ -408,6 +413,7 @@ func StartProxy(configuration *DiferenciaConfiguration) {
 		proxyMux := http.NewServeMux()
 		// Matches everything
 		proxyMux.HandleFunc("/", diferenciaHandler)
+		proxyMux.HandleFunc("/healthdif", healthHandler)
 		logrus.Errorf("Error starting proxy: %s", http.ListenAndServe(":"+strconv.Itoa(Config.Port), proxyMux))
 	}()
 
