@@ -10,6 +10,48 @@ import (
 
 var _ = Describe("Url Creator", func() {
 
+	Describe("Get File part from a URL", func() {
+		Context("URL without file", func() {
+			It("should return index if the host does not contain any slash at the end", func() {
+				url, _ := url.Parse("http://www.google.com:433")
+
+				result := core.ExtractFile(*url)
+
+				Expect(result).To(Equal("index.html"))
+			})
+			It("should return index if there is a slash at the end but no file", func() {
+				url, _ := url.Parse("http://www.google.com:433/site/")
+
+				result := core.ExtractFile(*url)
+
+				Expect(result).To(Equal("index.html"))
+			})
+			It("should return index if there is no slash at the end but subpath", func() {
+				url, _ := url.Parse("http://www.google.com:433/site")
+
+				result := core.ExtractFile(*url)
+
+				Expect(result).To(Equal("index.html"))
+			})
+		})
+		Context("URL with file", func() {
+			It("should return the file when it is root", func() {
+				url, _ := url.Parse("http://www.google.com:433/script.js")
+
+				result := core.ExtractFile(*url)
+
+				Expect(result).To(Equal("script.js"))
+			})
+			It("should return the file when it is un subpath", func() {
+				url, _ := url.Parse("http://www.google.com:433/site/script.js")
+
+				result := core.ExtractFile(*url)
+
+				Expect(result).To(Equal("script.js"))
+			})
+		})
+	})
+
 	Describe("Transform Host Url to Provided one", func() {
 		Context("With host without query path", func() {
 			It("should replace host", func() {

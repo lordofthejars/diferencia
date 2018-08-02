@@ -1,8 +1,14 @@
 = Administration Console
 include::_attributes.adoc[]
 
-[#admin-api]
-== Rest API
+[#admin-configuration]
+== Configuration
+
+TIP: By default the admin console is listening port `8082` but it can be configured by using `--adminPort` argument.
+
+=== Rest API
+
+==== Updating Configuration
 
 Diferencia has an administration console that can be accessed as a Rest API to configure some of the Diferencia parameters without having to restart it.
 At this time these parameters are:
@@ -13,8 +19,6 @@ At this time these parameters are:
 * secondary
 * noise detection
 * mode
-
-By default the admin console is listening port `8082` but it can be configured by using `--adminPort` argument.
 
 To update any of the parameters you only need to send a JSON document using `PUT` http method to `/configuration` endpoint to given host and configured port.
 
@@ -39,3 +43,42 @@ TIP: You can set all parameters to be updated in the document, and all of them w
 
 .Update Noise Cancellation with Insomnia
 image::confupdate.png[]
+
+[#stats-configuration]
+== Stats
+
+=== Rest API
+
+==== Getting Stats
+
+Diferencia collects stats of the failing endpoints so you can get which endpoints are failing and how many times they have failed.
+In future, these stats can be improved offering more information, for now it just offers basic information.
+
+To get stats you only need to use `GET` http method to `/stats` endpoint to given host and configured port.
+
+And the response is:
+
+[source, json]
+----
+[
+	{
+		"endpoint": {
+			"method": "GET", // <1>
+			"path": "/" // <2>
+		},
+		"errors": 5 // <3>
+	}
+]
+----
+<1> Http method used in request
+<2> Path used to replicate
+<3> Number of errors
+
+NOTE: Only endpoints with errors are returned, if there is no errors then empy array is returned.
+
+.Stats call with Insomnia
+image::stats.png[]
+
+=== Dashboard
+
+You can access to Dashboard using a browser to have a web view of what's happening in Diferencia.

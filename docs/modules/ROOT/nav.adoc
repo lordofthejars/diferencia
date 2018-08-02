@@ -20,6 +20,7 @@
 ** xref:run-diferencia.adoc#configuration[Configuration]
 
 * Administration Console
-** xref:admin.adoc#admin-api[API]
+** xref:admin.adoc#admin-configuration[Configuration]
+** xref:admin.adoc#stats-configuration[Stats]
 
 * xref:what_next.adoc[What's Next]
