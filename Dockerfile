@@ -9,8 +9,12 @@ WORKDIR /go/src/github.com/lordofthejars/diferencia
 
 COPY . .
 
+RUN wget https://github.com/gobuffalo/packr/releases/download/v1.11.1/packr_1.11.1_linux_amd64.tar.gz
+RUN tar -zxvf packr_1.11.1_linux_amd64.tar.gz 
+RUN cp packr /usr/local/bin
+
 RUN dep ensure
-RUN GOOS=linux GOARCH=amd64 go build -o binaries/diferencia
+RUN GOOS=linux GOARCH=amd64 packr build -o binaries/diferencia
 
 FROM alpine:3.7
 

@@ -3,47 +3,70 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:d6afaeed1502aa28e80a4ed0981d570ad91b2579193404256ce672ed0a609e0d"
   name = "github.com/beorn7/perks"
   packages = ["quantile"]
+  pruneopts = "UT"
   revision = "3a771d992973f24aa725d07868b467d1ddfceafb"
 
 [[projects]]
+  digest = "1:b48d19e79fa607e9e3715ff9a73cdd3777a9cac254b50b9af721466f687e850d"
   name = "github.com/evanphx/json-patch"
   packages = ["."]
+  pruneopts = "UT"
   revision = "afac545df32f2287a079e2dfb7ba2745a643747e"
   version = "v3.0.0"
 
 [[projects]]
+  digest = "1:2155aded3b7f51598751f556d9a524d92b35ad4aa4bb41f2d69a0f4ca76a5bfd"
+  name = "github.com/gobuffalo/packr"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "9e76dbe10b00dd1fa8f29cfa4fac72297beb32a4"
+  version = "v1.12.1"
+
+[[projects]]
+  digest = "1:15042ad3498153684d09f393bbaec6b216c8eec6d61f63dff711de7d64ed8861"
   name = "github.com/golang/protobuf"
   packages = ["proto"]
+  pruneopts = "UT"
   revision = "b4deda0973fb4c70b50d226b1af49f3da59f5265"
   version = "v1.1.0"
 
 [[projects]]
+  digest = "1:870d441fe217b8e689d7949fef6e43efbc787e50f200cb1e70dbca9204a1d6be"
   name = "github.com/inconshreveable/mousetrap"
   packages = ["."]
+  pruneopts = "UT"
   revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
   version = "v1.0"
 
 [[projects]]
   branch = "master"
+  digest = "1:b30af7d772f5d4be7f317b365d665fbc8595d458913dc5a85e5629699b8fdb73"
   name = "github.com/lordofthejars/jsondiff"
   packages = ["."]
+  pruneopts = "UT"
   revision = "7de28ed2b6e3cdae8e402f68542b1f287740f764"
 
 [[projects]]
   branch = "master"
+  digest = "1:fc2b04b0069d6b10bdef96d278fe20c345794009685ed3c8c7f1a6dc023eefec"
   name = "github.com/mattbaird/jsonpatch"
   packages = ["."]
+  pruneopts = "UT"
   revision = "81af80346b1a01caae0cbc27fd3c1ba5b11e189f"
 
 [[projects]]
+  digest = "1:ff5ebae34cfbf047d505ee150de27e60570e8c394b3b8fdbb720ff6ac71985fc"
   name = "github.com/matttproud/golang_protobuf_extensions"
   packages = ["pbutil"]
+  pruneopts = "UT"
   revision = "c12348ce28de40eed0136aa2b644d0ee0650e56c"
   version = "v1.0.1"
 
 [[projects]]
+  digest = "1:72f35d3e412bc67b121e15ea4c88a3b3da8bcbc2264339e7ffa4a1865799840c"
   name = "github.com/onsi/ginkgo"
   packages = [
     ".",
@@ -63,12 +86,14 @@
     "reporters/stenographer",
     "reporters/stenographer/support/go-colorable",
     "reporters/stenographer/support/go-isatty",
-    "types"
+    "types",
   ]
+  pruneopts = "UT"
   revision = "fa5fabab2a1bfbd924faf4c067d07ae414e2aedf"
   version = "v1.5.0"
 
 [[projects]]
+  digest = "1:d0c2c4e2d0006cd28c220a549cda1de8e67abc65ed4c572421492bbf0492ceaf"
   name = "github.com/onsi/gomega"
   packages = [
     ".",
@@ -82,86 +107,116 @@
     "matchers/support/goraph/edge",
     "matchers/support/goraph/node",
     "matchers/support/goraph/util",
-    "types"
+    "types",
   ]
+  pruneopts = "UT"
   revision = "62bff4df71bdbc266561a0caee19f0594b17c240"
   version = "v1.4.0"
 
 [[projects]]
+  digest = "1:40e195917a951a8bf867cd05de2a46aaf1806c50cf92eebf4c16f78cd196f747"
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
+
+[[projects]]
+  digest = "1:c58e432f2d21c9d694e9e22eccef7c1db9b31caa6cb6db63dd2dc08bf3e9f037"
   name = "github.com/prometheus/client_golang"
   packages = ["prometheus"]
+  pruneopts = "UT"
   revision = "d6a9817c4a"
 
 [[projects]]
   branch = "master"
+  digest = "1:32d10bdfa8f09ecf13598324dba86ab891f11db3c538b6a34d1c3b5b99d7c36b"
   name = "github.com/prometheus/client_model"
   packages = ["go"]
+  pruneopts = "UT"
   revision = "99fa1f4be8e564e8a6b613da7fa6f46c9edafc6c"
 
 [[projects]]
   branch = "master"
+  digest = "1:e469cd65badf7694aeb44874518606d93c1d59e7735d3754ad442782437d3cc3"
   name = "github.com/prometheus/common"
   packages = [
     "expfmt",
     "internal/bitbucket.org/ww/goautoneg",
-    "model"
+    "model",
   ]
+  pruneopts = "UT"
   revision = "7600349dcfe1abd18d72d3a1770870d9800a7801"
 
 [[projects]]
   branch = "master"
+  digest = "1:5b52592ee5c75444338e0949f8e80fca7d616c1bcc209b9336a1861b526400fb"
   name = "github.com/prometheus/procfs"
   packages = [
     ".",
     "internal/util",
     "nfs",
-    "xfs"
+    "xfs",
   ]
+  pruneopts = "UT"
   revision = "7d6f385de8bea29190f15ba9931442a0eaef9af7"
 
 [[projects]]
+  digest = "1:9e9193aa51197513b3abcb108970d831fbcf40ef96aa845c4f03276e1fa316d2"
   name = "github.com/sirupsen/logrus"
   packages = ["."]
+  pruneopts = "UT"
   revision = "v1.0.5"
 
 [[projects]]
+  digest = "1:645cabccbb4fa8aab25a956cbcbdf6a6845ca736b2c64e197ca7cbb9d210b939"
   name = "github.com/spf13/cobra"
   packages = ["."]
+  pruneopts = "UT"
   revision = "ef82de70bb3f60c65fb8eebacbb2d122ef517385"
   version = "v0.0.3"
 
 [[projects]]
+  digest = "1:9424f440bba8f7508b69414634aef3b2b3a877e522d8a4624692412805407bb7"
   name = "github.com/spf13/pflag"
   packages = ["."]
+  pruneopts = "UT"
   revision = "583c0c0531f06d5278b7d917446061adc344b5cd"
   version = "v1.0.1"
 
 [[projects]]
   branch = "master"
+  digest = "1:3f3a05ae0b95893d90b9b3b5afdb79a9b3d96e4e36e099d841ae602e4aca0da8"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
+  pruneopts = "UT"
   revision = "a49355c7e3f8fe157a85be2f77e6e269a0f89602"
 
 [[projects]]
   branch = "master"
+  digest = "1:e2a579de26b74a8d2a7c4eba30ec65d895ef4cede50639d654734558cd2a917e"
   name = "golang.org/x/net"
   packages = [
     "html",
     "html/atom",
-    "html/charset"
+    "html/charset",
   ]
+  pruneopts = "UT"
   revision = "db08ff08e8622530d9ed3a0e8ac279f6d4c02196"
 
 [[projects]]
   branch = "master"
+  digest = "1:f454baa55ae9d6bf2c301b816662e5352ef71177a8d1eabeb73a08d6ab42888f"
   name = "golang.org/x/sys"
   packages = [
     "unix",
-    "windows"
+    "windows",
   ]
+  pruneopts = "UT"
   revision = "8883426083c04a2627e6e59d84d5f6fb63d16c91"
 
 [[projects]]
+  digest = "1:aa4d6967a3237f8367b6bf91503964a77183ecf696f1273e8ad3551bb4412b5f"
   name = "golang.org/x/text"
   packages = [
     "encoding",
@@ -180,20 +235,33 @@
     "language",
     "runes",
     "transform",
-    "unicode/cldr"
+    "unicode/cldr",
   ]
+  pruneopts = "UT"
   revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
   version = "v0.3.0"
 
 [[projects]]
+  digest = "1:342378ac4dcb378a5448dd723f0784ae519383532f5e70ade24132c4c8693202"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
+  pruneopts = "UT"
   revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
   version = "v2.2.1"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f041746a9ea9fa5826ec62c28dc9f0b5dbb14942bcc32fd7424ef52ec34cc5bc"
+  input-imports = [
+    "github.com/evanphx/json-patch",
+    "github.com/gobuffalo/packr",
+    "github.com/lordofthejars/jsondiff",
+    "github.com/mattbaird/jsonpatch",
+    "github.com/onsi/ginkgo",
+    "github.com/onsi/gomega",
+    "github.com/prometheus/client_golang/prometheus",
+    "github.com/sirupsen/logrus",
+    "github.com/spf13/cobra",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1
