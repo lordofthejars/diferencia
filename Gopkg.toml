@@ -58,6 +58,10 @@
   name = "github.com/evanphx/json-patch"
   version = "v3.0.0"
 
+[[constraint]]
+  name = "github.com/gobuffalo/packr"
+  version = "v1.12.0"
+
 [prune]
   go-tests = true
   unused-packages = true

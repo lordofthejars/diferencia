@@ -176,13 +176,15 @@ func (conf DiferenciaConfiguration) AreHttpsClientParamsSet() bool {
 // Print configuration
 func (conf DiferenciaConfiguration) Print() {
 	fmt.Printf("Port: %d\n", conf.Port)
+	fmt.Printf("Prometheus Port: %d\n", conf.PrometheusPort)
+	fmt.Printf("Admin Port %d\n", conf.AdminPort)
 	fmt.Printf("Service Name: %s\n", conf.serviceName)
 	fmt.Printf("Primary: %s\n", conf.Primary)
 	fmt.Printf("Secondary: %s\n", conf.Secondary)
 	fmt.Printf("Candidate: %s\n", conf.Candidate)
-	fmt.Printf("Store Results: %s\n", conf.StoreResults)
 	fmt.Printf("Difference Mode: %s\n", conf.DifferenceMode.String())
 	fmt.Printf("Noise Detection: %t\n", conf.NoiseDetection)
+	fmt.Printf("Store Results: %s\n", conf.StoreResults)
 	fmt.Printf("Ignore Values of: %v\n", conf.IgnoreValues)
 	fmt.Printf("Ignore Values File: %s\n", conf.IgnoreValuesFile)
 	fmt.Printf("Headers: %t\n", conf.Headers)
@@ -193,8 +195,6 @@ func (conf DiferenciaConfiguration) Print() {
 	fmt.Printf("Client Cert Path: %s\n", conf.ClientCert)
 	fmt.Printf("Client Key Path: %s\n", conf.ClientKey)
 	fmt.Printf("Prometheus Enabled: %t\n", conf.Prometheus)
-	fmt.Printf("Prometheus Port: %d\n", conf.PrometheusPort)
-	fmt.Printf("Admin Port %d\n", conf.AdminPort)
 }
 
 type DiferenciaError struct {
@@ -376,8 +376,9 @@ func diferenciaHandler(w http.ResponseWriter, r *http.Request) {
 		// If there is a regression
 		w.WriteHeader(http.StatusPreconditionFailed)
 		if Config.Prometheus {
-			prometheusCounter.WithLabelValues(r.Method, r.RequestURI).Inc()
+			prometheusCounter.WithLabelValues(r.Method, r.URL.Path).Inc()
 		}
+		exporter.IncrementError(r.Method, r.URL.Path)
 	}
 }
 
@@ -430,6 +431,8 @@ func StartProxy(configuration *DiferenciaConfiguration) {
 		// Initialize Admin server
 		adminMux := http.NewServeMux()
 		adminMux.HandleFunc("/configuration", adminHandler)
+		adminMux.HandleFunc("/stats", exporter.StatsHandler)
+		adminMux.HandleFunc("/dashboard/", dashboardHandler)
 		logrus.Errorf("Error starting admin: %s", http.ListenAndServe(":"+strconv.Itoa(Config.AdminPort), adminMux))
 	}()
 
