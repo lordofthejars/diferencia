@@ -82,3 +82,4 @@ image::stats.png[]
 === Dashboard
 
 You can access to Dashboard using a browser to have a web view of what's happening in Diferencia.
+You need to access to `/dashboard/` and a dashboard web page with error endpoints is shown.
