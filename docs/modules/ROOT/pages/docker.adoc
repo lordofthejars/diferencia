@@ -1,0 +1,14 @@
+= Docker
+include::_attributes.adoc[]
+
+Diferencia is also provided as Docker image.
+
+For example:
+
+`docker run -ti --rm lordofthejars/diferencia:<version> start --help` 
+
+It will print the helper message.
+
+If you want to start Diferencia to start capturing traffic and redirecting to seconday and candidate hosts, you only need to do:
+
+`docker run --rm -ti -p 8080:8080 -p 8081:8081 -p 8082:8082 lordofthejars/diferencia start -c http://now.httpbin.org/ -p http://now.httpbin.org/`
