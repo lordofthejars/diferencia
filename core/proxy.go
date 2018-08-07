@@ -70,24 +70,26 @@ const (
 
 // DiferenciaConfiguration object
 type DiferenciaConfiguration struct {
-	Port                          int
-	serviceName                   string
-	Primary, Secondary, Candidate string
-	StoreResults                  string
-	DifferenceMode                Difference
-	NoiseDetection                bool
-	AllowUnsafeOperations         bool
-	Prometheus                    bool
-	PrometheusPort                int
-	Headers                       bool
-	IgnoreHeadersValues           []string
-	IgnoreValues                  []string
-	IgnoreValuesFile              string
-	InsecureSkipVerify            bool
-	CaCert                        string
-	ClientCert                    string
-	ClientKey                     string
-	AdminPort                     int
+	Port                  int        `json:"port,omitempty"`
+	ServiceName           string     `json:"serviceName,omitempty"`
+	Primary               string     `json:"primary,omitempty"`
+	Secondary             string     `json:"secondary,omitempty"`
+	Candidate             string     `json:"candidate,omitempty"`
+	StoreResults          string     `json:"storeResults,omitempty"`
+	DifferenceMode        Difference `json:"differenceMode,omitempty"`
+	NoiseDetection        bool       `json:"noiseDetection,omitempty"`
+	AllowUnsafeOperations bool       `json:"allowUnsafeOperartions,omitempty"`
+	Prometheus            bool       `json:"prometheus,omitempty"`
+	PrometheusPort        int        `json:"prometheusPort,omitempty"`
+	Headers               bool       `json:"headers,omitempty"`
+	IgnoreHeadersValues   []string   `json:"ignoreHeadersValues,omitempty"`
+	IgnoreValues          []string   `json:"ignoreValues,omitempty"`
+	IgnoreValuesFile      string     `json:"ignoreValuesFile,omitempty"`
+	InsecureSkipVerify    bool       `json:"insecureSkipVerify,omitempty"`
+	CaCert                string     `json:"caCert,omitempty"`
+	ClientCert            string     `json:"clientCert,omitempty"`
+	ClientKey             string     `json:"clientKey,omitempty"`
+	AdminPort             int        `json:"adminPort,omitempty"`
 }
 
 // UpdateConfiguration with configured params
@@ -95,7 +97,7 @@ func (conf *DiferenciaConfiguration) UpdateConfiguration(updateConfig Diferencia
 
 	if updateConfig.isServiceNameSet() {
 		conf.SetServiceName(updateConfig.ServiceName)
-		prometheusCounter = metrics.RegisterNumberOfRegressions(Config.serviceName)
+		prometheusCounter = metrics.RegisterNumberOfRegressions(Config.ServiceName)
 	}
 
 	if updateConfig.isPrimarySet() {
@@ -111,7 +113,7 @@ func (conf *DiferenciaConfiguration) UpdateConfiguration(updateConfig Diferencia
 		// Updates service name for new candidate in case of service name not set
 		if !updateConfig.isServiceNameSet() {
 			conf.SetServiceName(updateConfig.ServiceName)
-			prometheusCounter = metrics.RegisterNumberOfRegressions(Config.serviceName)
+			prometheusCounter = metrics.RegisterNumberOfRegressions(Config.ServiceName)
 		}
 	}
 
@@ -140,7 +142,7 @@ func (conf *DiferenciaConfiguration) UpdateConfiguration(updateConfig Diferencia
 }
 
 func (conf DiferenciaConfiguration) GetServiceName() string {
-	return conf.serviceName
+	return conf.ServiceName
 }
 
 // SetServiceName and case of empty it calculates from candidate
@@ -148,7 +150,7 @@ func (conf *DiferenciaConfiguration) SetServiceName(serviceName string) {
 
 	if len(serviceName) == 0 {
 		candidateURL, _ := url.Parse(conf.Candidate)
-		conf.serviceName = candidateURL.Hostname()
+		conf.ServiceName = candidateURL.Hostname()
 	}
 
 }
@@ -178,7 +180,7 @@ func (conf DiferenciaConfiguration) Print() {
 	fmt.Printf("Port: %d\n", conf.Port)
 	fmt.Printf("Prometheus Port: %d\n", conf.PrometheusPort)
 	fmt.Printf("Admin Port %d\n", conf.AdminPort)
-	fmt.Printf("Service Name: %s\n", conf.serviceName)
+	fmt.Printf("Service Name: %s\n", conf.ServiceName)
 	fmt.Printf("Primary: %s\n", conf.Primary)
 	fmt.Printf("Secondary: %s\n", conf.Secondary)
 	fmt.Printf("Candidate: %s\n", conf.Candidate)
@@ -446,7 +448,7 @@ func initialize() {
 
 	//Initialize Prometheus if required
 	if Config.Prometheus {
-		prometheusCounter = metrics.RegisterNumberOfRegressions(Config.serviceName)
+		prometheusCounter = metrics.RegisterNumberOfRegressions(Config.ServiceName)
 	}
 
 }

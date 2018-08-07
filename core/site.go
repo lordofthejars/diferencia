@@ -12,14 +12,15 @@ import (
 var site = packr.NewBox("../site")
 
 type DashboardVO struct {
-	Entries []exporter.Entry
+	Entries       []exporter.Entry
+	Configuration DiferenciaConfiguration
 }
 
 func dashboardHandler(w http.ResponseWriter, r *http.Request) {
 
 	element := ExtractFile(*r.URL)
 
-	err := renderHtmlTemplate(element, w, DashboardVO{exporter.Entries()}, site)
+	err := renderHtmlTemplate(element, w, DashboardVO{exporter.Entries(), *Config}, site)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

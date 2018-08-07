@@ -1,5 +1,13 @@
-= Docker
+= Run Docker
 include::_attributes.adoc[]
+
+Assumptions:
+
+* [x] You have a Docker host (or Kubernetes cluster) to deploy image
+
+IMPORTANT: This Docker image can be run in OpenShift since does not run with `root` privileges.
+
+== Start Docker Container
 
 Diferencia is also provided as Docker image.
 
