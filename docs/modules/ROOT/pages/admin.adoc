@@ -1,12 +1,38 @@
 = Administration Console
 include::_attributes.adoc[]
 
+Assumptions:
+
+* [x] You have Diferencia running (in case of Docker with admin port exposed). Default admin port is `8082`.
+
 [#admin-configuration]
 == Configuration
 
 TIP: By default the admin console is listening port `8082` but it can be configured by using `--adminPort` argument.
 
 === Rest API
+
+==== Getting Configuration
+
+Diferencia has an administration console that can be accessed as a Rest API to get configuration values.
+To get it you need to use `GET` http method to `/configuration` endpoint to given host and configured port.
+
+The JSON document of response is:
+
+[source, json]
+----
+{
+  "port": 8080,
+  "serviceName": "now.httpbin.org",
+  "primary": "http://now.httpbin.org/",
+  "secondary": "http://now.httpbin.org",
+  "candidate": "http://now.httpbin.org/",
+  "prometheusPort": 8081,
+  "adminPort": 8082
+  ... // <1>
+}
+----
+<1> All configuration parameters are exposed using camel case.
 
 ==== Updating Configuration
 
@@ -43,6 +69,11 @@ TIP: You can set all parameters to be updated in the document, and all of them w
 
 .Update Noise Cancellation with Insomnia
 image::confupdate.png[]
+
+=== Dashboard
+
+You can access to Dashboard using a browser to have a web view of basic configuration parameters.
+You need to access to `/dashboard/` and a dashboard web page with error endpoints is shown.
 
 [#stats-configuration]
 == Stats

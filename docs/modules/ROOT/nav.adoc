@@ -19,6 +19,8 @@
 ** xref:prometheus.adoc[Prometheus]
 ** xref:run-diferencia.adoc#configuration[Configuration]
 
+* xref:run_docker.adoc[Run In Docker]
+
 * Administration Console
 ** xref:admin.adoc#admin-configuration[Configuration]
 ** xref:admin.adoc#stats-configuration[Stats]

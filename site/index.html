@@ -32,12 +32,60 @@
 
   <div class="container-fluid container-cards-pf">
     <div class="row row-cards-pf">
+      <div class="col-xs-12">
+        <div class="card-pf card-pf-utilization">
+          <div class="card-pf-heading">
+            <p class="card-pf-heading-details">{{.Configuration.ServiceName}}</p>
+            <h2 class="card-pf-title">
+              Basic Configuration
+            </h2>
+          </div>
+          <div class="card-pf-body">
+            <div class="row">
+              <div class="col-md-6">
+                <dl class="dl-horizontal">
+                  <dt>Primary</dt>
+                  <dd>{{.Configuration.Primary}}</dd>
+                  <dt>Candidate</dt>
+                  <dd>{{.Configuration.Candidate}}</dd>
+                  <dt>Secondary</dt>
+                  <dd>{{.Configuration.Secondary}}</dd>
+                  <dt>Mode</dt>
+                  <dd>{{.Configuration.DifferenceMode.String}}</dd>
+                  <dt>Noise Detection</dt>
+                  <dd>{{.Configuration.NoiseDetection}}</dd>
+                </dl>
+              </div>
+              <div class="col-md-6">
+                  <dl class="dl-horizontal">
+                    <dt>Ignore Values</dt>
+                    <dd>{{.Configuration.IgnoreValues}}</dd>
+                    <dt>Ignore Values File</dt>
+                    <dd>{{.Configuration.IgnoreValuesFile}}</dd>
+                    <dt>Headers Check</dt>
+                    <dd>{{.Configuration.Headers}}</dd>
+                    <dt>Ignore Headers Values</dt>
+                    <dd>{{.Configuration.IgnoreHeadersValues}}</dd>
+                    <dt>Allow Unsafe Operations</dt>
+                    <dd>{{.Configuration.AllowUnsafeOperations}}</dd>
+                  </dl>
+                </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="container-fluid container-cards-pf">
+    <div class="row row-cards-pf">
       {{range .Entries}}
       <div class="col-xs-12 col-sm-4 col-md-3 col-lg-2">
         <div class="card-pf card-pf-view card-pf-view-select card-pf-view-multi-select">
           <div class="card-pf-body">
             <h2 class="card-pf-title text-center">
-                {{.Endpoint.Method}} - {{.Endpoint.Path}}
+              {{.Endpoint.Method}} - {{.Endpoint.Path}}
             </h2>
             <div class="card-pf-items text-center">
               <div class="card-pf-item">

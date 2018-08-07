@@ -22,6 +22,8 @@ RUN addgroup -S diferencia && adduser -S -G diferencia diferencia
 USER diferencia
 
 EXPOSE 8080
+EXPOSE 8081
+EXPOSE 8082
 
 WORKDIR /home/diferencia
 COPY --from=builder /go/src/github.com/lordofthejars/diferencia/binaries/diferencia .

@@ -70,7 +70,12 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 
 		w.WriteHeader(http.StatusOK)
 	} else {
-		w.WriteHeader(http.StatusNotFound)
+		if r.Method == http.MethodGet {
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(Config)
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+		}
 	}
 
 }
