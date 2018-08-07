@@ -70,6 +70,11 @@ TIP: You can set all parameters to be updated in the document, and all of them w
 .Update Noise Cancellation with Insomnia
 image::confupdate.png[]
 
+=== Dashboard
+
+You can access to Dashboard using a browser to have a web view of basic configuration parameters.
+You need to access to `/dashboard/` and a dashboard web page with error endpoints is shown.
+
 [#stats-configuration]
 == Stats
 
