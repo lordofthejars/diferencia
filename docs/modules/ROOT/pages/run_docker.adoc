@@ -1,4 +1,5 @@
 = Run Docker
+:icons: font
 include::_attributes.adoc[]
 
 Assumptions:
