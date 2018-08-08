@@ -13,7 +13,7 @@ Diferencia is also provided as Docker image.
 
 For example:
 
-icon:fa-terminal[] `docker run -ti --rm lordofthejars/diferencia:<version> start --help` 
+icon:terminal[] `docker run -ti --rm lordofthejars/diferencia:<version> start --help` 
 
 It will print the helper message.
 
