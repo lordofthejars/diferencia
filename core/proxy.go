@@ -76,7 +76,7 @@ type DiferenciaConfiguration struct {
 	Secondary             string     `json:"secondary,omitempty"`
 	Candidate             string     `json:"candidate,omitempty"`
 	StoreResults          string     `json:"storeResults,omitempty"`
-	DifferenceMode        Difference `json:"differenceMode,omitempty"`
+	DifferenceMode        Difference `json:"-"`
 	NoiseDetection        bool       `json:"noiseDetection,omitempty"`
 	AllowUnsafeOperations bool       `json:"allowUnsafeOperartions,omitempty"`
 	Prometheus            bool       `json:"prometheus,omitempty"`

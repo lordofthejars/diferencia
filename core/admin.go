@@ -72,7 +72,14 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		if r.Method == http.MethodGet {
 			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(Config)
+			type Alias DiferenciaConfiguration
+			json.NewEncoder(w).Encode(&struct {
+				Mode string `json:"differenceMode,omitempty"`
+				*Alias
+			}{
+				Mode:  Config.DifferenceMode.String(),
+				Alias: (*Alias)(Config),
+			})
 		} else {
 			w.WriteHeader(http.StatusNotFound)
 		}
