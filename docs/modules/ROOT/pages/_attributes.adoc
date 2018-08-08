@@ -1,2 +1,3 @@
 :moduledir: ..
 include::{moduledir}/_attributes.adoc[]
+:icons: font
