@@ -33,6 +33,7 @@ func main() {
 	var logLevel string
 	var insecureSkipVerify bool
 	var caCert, clientCert, clientKey string
+	var forcePlainText bool
 
 	var adminPort int
 
@@ -61,6 +62,7 @@ func main() {
 			config.ClientCert = clientCert
 			config.ClientKey = clientKey
 			config.AdminPort = adminPort
+			config.ForcePlainText = forcePlainText
 
 			differenceMode, err := core.NewDifference(difference)
 
@@ -118,6 +120,8 @@ func main() {
 	cmdStart.Flags().StringVar(&caCert, "caCert", "", "Certificate Authority path (PEM)")
 	cmdStart.Flags().StringVar(&clientCert, "clientCert", "", "Client Certificate path (X509)")
 	cmdStart.Flags().StringVar(&clientKey, "clientKey", "", "Client Key path (X509)")
+
+	cmdStart.Flags().BoolVar(&forcePlainText, "forcePlainText", false, "Force the received of content type as plain text instead of json")
 
 	cmdStart.MarkFlagRequired("primary")
 	cmdStart.MarkFlagRequired("candidate")

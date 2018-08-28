@@ -2,14 +2,17 @@ package core
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/lordofthejars/diferencia/difference/header"
+	"github.com/lordofthejars/diferencia/difference/plain"
 
 	"github.com/lordofthejars/diferencia/difference/json"
 	"github.com/lordofthejars/diferencia/exporter"
@@ -90,6 +93,7 @@ type DiferenciaConfiguration struct {
 	ClientCert            string     `json:"clientCert,omitempty"`
 	ClientKey             string     `json:"clientKey,omitempty"`
 	AdminPort             int        `json:"adminPort,omitempty"`
+	ForcePlainText        bool       `json:"forcePlainText,omitempty"`
 }
 
 // UpdateConfiguration with configured params
@@ -197,6 +201,7 @@ func (conf DiferenciaConfiguration) Print() {
 	fmt.Printf("Client Cert Path: %s\n", conf.ClientCert)
 	fmt.Printf("Client Key Path: %s\n", conf.ClientKey)
 	fmt.Printf("Prometheus Enabled: %t\n", conf.Prometheus)
+	fmt.Printf("Force Plain Text: %t\n", conf.ForcePlainText)
 }
 
 type DiferenciaError struct {
@@ -241,7 +246,6 @@ func Diferencia(r *http.Request) (bool, error) {
 	var secondaryFullURL string
 	var secondaryBodyContent []byte
 	var secondaryStatus int
-
 	if Config.NoiseDetection {
 		// Get secondary to do the noise cancellation
 		secondaryFullURL := CreateUrl(*r.URL, Config.Secondary)
@@ -251,29 +255,39 @@ func Diferencia(r *http.Request) (bool, error) {
 			logrus.Errorf("Error while connecting to Secondary site (%s) with error %s", candidateFullURL, err.Error())
 			return false, &DiferenciaError{http.StatusServiceUnavailable, fmt.Sprintf("Error while connecting to Secondary site (%s) with error %s", candidateFullURL, err.Error())}
 		}
-
 		// If status code is equal then we detect noise and and remove from primary and candidate
 		// What to do in case of two identical status code but no body content (404) might be still valid since you are testing that nothing is there
 		if primaryStatus == secondaryStatus {
-			noiseOperation := json.NoiseOperation{}
-			manualNoise := manualNoiseDetection()
-			noiseOperation.Initialize(manualNoise)
-			err := noiseOperation.Detect(primaryBodyContent, secondaryBodyContent)
+
+			contentType := primaryHeader.Get("Content-Type")
+			var err error
+			switch {
+			case strings.HasPrefix(contentType, "application/json"):
+				primaryBodyContent, candidateBodyContent, err = noiseCancellationJson(primaryBodyContent, secondaryBodyContent, candidateBodyContent)
+			case strings.HasPrefix(contentType, "text/plain"):
+				primaryBodyContent, candidateBodyContent = noiseCancellationText(primaryBodyContent, secondaryBodyContent, candidateBodyContent)
+			default:
+				{
+					if Config.ForcePlainText {
+						primaryBodyContent, candidateBodyContent = noiseCancellationText(primaryBodyContent, secondaryBodyContent, candidateBodyContent)
+					} else {
+						primaryBodyContent, candidateBodyContent, err = noiseCancellationJson(primaryBodyContent, secondaryBodyContent, candidateBodyContent)
+					}
+				}
+			}
+
 			if err != nil {
 				logrus.Error("Error detecting noise between %s and %s. (%s)", primaryFullURL, secondaryFullURL, err.Error())
 				return false, &DiferenciaError{http.StatusBadRequest, fmt.Sprintf("Error detecting noise between %s and %s. (%s)", primaryFullURL, secondaryFullURL, err.Error())}
 			}
-			primaryWithoutNoise, candidateWithoutNoise, err := noiseOperation.Remove(primaryBodyContent, candidateBodyContent)
 
-			result = compareResult(candidateWithoutNoise, primaryWithoutNoise, candidateStatus, primaryStatus, candidateHeader, primaryHeader)
 		} else {
 			logrus.Errorf("Status code between %s(%d) and %s(%d) are different", primaryFullURL, primaryStatus, secondaryFullURL, secondaryStatus)
 			return false, &DiferenciaError{http.StatusBadRequest, fmt.Sprintf("Status code between %s(%d) and %s(%d) are different", primaryFullURL, primaryStatus, secondaryFullURL, secondaryStatus)}
 		}
-	} else {
-		// Comparision without noise cancellation
-		result = compareResult(candidateBodyContent, primaryBodyContent, candidateStatus, primaryStatus, candidateHeader, primaryHeader)
 	}
+
+	result = compareResult(candidateBodyContent, primaryBodyContent, candidateStatus, primaryStatus, candidateHeader, primaryHeader)
 
 	if Config.IsStoreResultsSet() {
 		primary := exporter.CreateInteraction(primaryFullURL, primaryBodyContent, primaryStatus)
@@ -293,6 +307,30 @@ func Diferencia(r *http.Request) (bool, error) {
 
 	return result, nil
 
+}
+
+func noiseCancellationText(primaryBodyContent, secondaryBodyContent, candidateBodyContent []byte) ([]byte, []byte) {
+
+	noiseOperation := plain.NoiseOperation{}
+	noiseOperation.Detect(primaryBodyContent, secondaryBodyContent)
+
+	primaryWithoutNoise, candidateWithoutNoise := noiseOperation.Remove(primaryBodyContent, candidateBodyContent)
+
+	return primaryWithoutNoise, candidateWithoutNoise
+
+}
+
+func noiseCancellationJson(primaryBodyContent, secondaryBodyContent, candidateBodyContent []byte) ([]byte, []byte, error) {
+	noiseOperation := json.NoiseOperation{}
+	manualNoise := manualNoiseDetection()
+	noiseOperation.Initialize(manualNoise)
+	err := noiseOperation.Detect(primaryBodyContent, secondaryBodyContent)
+	if err != nil {
+		return nil, nil, err
+	}
+	primaryWithoutNoise, candidateWithoutNoise, _ := noiseOperation.Remove(primaryBodyContent, candidateBodyContent)
+
+	return primaryWithoutNoise, candidateWithoutNoise, nil
 }
 
 func manualNoiseDetection() []string {
@@ -338,6 +376,7 @@ func readLines(path string) ([]string, error) {
 }
 
 func compareResult(candidate, primary []byte, candidateStatus, primaryStatus int, candidateHeader, primaryHeader http.Header) bool {
+
 	// TODO This method should be refactored to a chain of responsibility pattern
 	if primaryStatus == candidateStatus {
 		if Config.Headers {
@@ -345,8 +384,23 @@ func compareResult(candidate, primary []byte, candidateStatus, primaryStatus int
 				return false
 			}
 		}
-		// Comparision between documents without noise
-		return json.CompareDocuments(candidate, primary, Config.DifferenceMode.String())
+		// Comparision between documents
+		contentType := primaryHeader.Get("Content-Type")
+		switch {
+		case strings.HasPrefix(contentType, "application/json"):
+			return json.CompareDocuments(candidate, primary, Config.DifferenceMode.String())
+		case strings.HasPrefix(contentType, "text/plain"):
+			return bytes.Equal(candidate, primary)
+		default:
+			{
+				if Config.ForcePlainText {
+					return bytes.Equal(candidate, primary)
+				} else {
+					return json.CompareDocuments(candidate, primary, Config.DifferenceMode.String())
+				}
+			}
+		}
+
 	}
 	return false
 }
@@ -360,7 +414,6 @@ func diferenciaHandler(w http.ResponseWriter, r *http.Request) {
 
 	mutex.Lock()
 	defer mutex.Unlock()
-
 	result, err := Diferencia(r)
 	if err != nil {
 		if de, ok := err.(*DiferenciaError); ok {
