@@ -1,0 +1,41 @@
+= Plain Text
+include::_attributes.adoc[]
+
+By default, Diferencia expects to receive and compare JSON documents.
+But if the response contains the `Content-Type` header to `text/plain` then the noise detection and comparison are done using text logic instead of JSON one.
+
+IMPORTANT: If `Content-Type` header is not set in the response, then JSON logic is enabled by default.
+
+== Noise Detection
+
+Text logic also implements a way of noise detection.
+The algorithm is based on substring + starts with logic.
+
+Let's see some examples:
+
+----
+primary: aaaa
+secondary: aa
+candidate: aab
+----
+
+Then _candidate_ is *equals* to _primary_ because the common starting part of _primary_ and _secondary_ is `aa`.
+Since _candidate_ starts with `aa` too then they are equal.
+
+----
+primary: aaaa
+secondary: aa
+candidate: bbb
+----
+
+Then _candidate_ is *not equals* to _primary_ because _candidate_ does not start with the common part of _primary_ and _secondary_.
+
+== Forcing Plain Text
+
+If `Content-Type` header is not set in the response, then JSON logic is enabled by default, but you can change this behavior by setting `--forcePlainText` configuration parameter to true.
+
+After that, if a response does not contain `Content-Type` header, then text logic is enabled by default.
+
+== Modes
+
+When content is text, the `modes` value is ignored and it uses a pure equals implementation applying noise detection previously.
