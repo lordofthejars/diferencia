@@ -253,7 +253,12 @@ In next table you can see all possible configuration arguments that you can pass
 |8081
 
 |--adminPort
-|Admin endpointport
+|Admin endpoint port
 |integer
 |8082
+
+|--forcePlainText
+|Force plain text comparision if `Content-Type` is not set in response
+|boolean
+|false
 |===

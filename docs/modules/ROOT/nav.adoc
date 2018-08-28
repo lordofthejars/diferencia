@@ -25,4 +25,7 @@
 ** xref:admin.adoc#admin-configuration[Configuration]
 ** xref:admin.adoc#stats-configuration[Stats]
 
+* Experimental
+** xref:plain_text.adoc[Plain Text Comparision]
+
 * xref:what_next.adoc[What's Next]
