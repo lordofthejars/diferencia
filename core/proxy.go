@@ -305,8 +305,34 @@ func Diferencia(r *http.Request) (bool, error) {
 
 	logrus.Debugf("Result of comparing %s and %s is %t", primaryFullURL, candidateFullURL, result)
 
+	// If it is a failure let's print the contents.
+	if !result {
+		logrus.Debugf("************************")
+		logrus.Debugf("Explanation of Failure:")
+		logrus.Debugf("Primary Status Code: %d Candidate StatusCode: %d", primaryStatus, candidateStatus)
+		logrus.Debugf("Primary Content:")
+		logrus.Debugf(string(primaryBodyContent[:]))
+		logrus.Debugf("Candidate Content:")
+		logrus.Debugf(string(candidateBodyContent[:]))
+		if Config.Headers {
+			logrus.Debugf("Primary Headers:")
+			logrus.Debugf(createKeyValuePairs(primaryHeader))
+			logrus.Debugf("Candidate Headers:")
+			logrus.Debugf(createKeyValuePairs(candidateHeader))
+		}
+		logrus.Debugf("************************")
+	}
+
 	return result, nil
 
+}
+
+func createKeyValuePairs(m http.Header) string {
+	b := new(bytes.Buffer)
+	for key, value := range m {
+		fmt.Fprintf(b, "%s=\"%s\"\n", key, value)
+	}
+	return b.String()
 }
 
 func noiseCancellationText(primaryBodyContent, secondaryBodyContent, candidateBodyContent []byte) ([]byte, []byte) {
