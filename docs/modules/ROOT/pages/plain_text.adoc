@@ -39,3 +39,10 @@ After that, if a response does not contain `Content-Type` header, then text logi
 == Modes
 
 When content is text, the `modes` value is ignored and it uses a pure equals implementation applying noise detection previously.
+
+== Levenshtein
+
+If you want to not make a complete equal between text, you can use Levenshtein algorithm to set the minium equivalence you expect to assert that the strings are equal.
+
+You've got `levenshteinPercentage` parameter which you can set to 30, 40, 60, 93 percent of acceptance.
+So for example setting it to 85, means that both _primary_ and _candidate_ text content will be equal, if they have 85% of content similar.

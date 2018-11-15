@@ -257,6 +257,11 @@ In next table you can see all possible configuration arguments that you can pass
 |integer
 |8082
 
+|--levenshteinPercentage
+|Sets the minimum percentage to be equal in case of using plain text (40, 79, 90, ...)
+|integer
+|100
+
 |--forcePlainText
 |Force plain text comparision if `Content-Type` is not set in response
 |boolean
