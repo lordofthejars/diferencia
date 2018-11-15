@@ -34,6 +34,7 @@ func main() {
 	var insecureSkipVerify bool
 	var caCert, clientCert, clientKey string
 	var forcePlainText bool
+	var levenshteinPercentage int
 
 	var adminPort int
 
@@ -63,6 +64,7 @@ func main() {
 			config.ClientKey = clientKey
 			config.AdminPort = adminPort
 			config.ForcePlainText = forcePlainText
+			config.LevenshteinPercentage = levenshteinPercentage
 
 			differenceMode, err := core.NewDifference(difference)
 
@@ -122,6 +124,7 @@ func main() {
 	cmdStart.Flags().StringVar(&clientKey, "clientKey", "", "Client Key path (X509)")
 
 	cmdStart.Flags().BoolVar(&forcePlainText, "forcePlainText", false, "Force the received of content type as plain text instead of json")
+	cmdStart.Flags().IntVar(&levenshteinPercentage, "levenshteinPercentage", 100, "Sets the minimum percentage to be equal in case of using plain text (40, 79, 90, ...)")
 
 	cmdStart.MarkFlagRequired("primary")
 	cmdStart.MarkFlagRequired("candidate")

@@ -94,6 +94,7 @@ type DiferenciaConfiguration struct {
 	ClientKey             string     `json:"clientKey,omitempty"`
 	AdminPort             int        `json:"adminPort,omitempty"`
 	ForcePlainText        bool       `json:"forcePlainText,omitempty"`
+	LevenshteinPercentage int        `json:"levenshteinPercentage,omitempty"`
 }
 
 // UpdateConfiguration with configured params
@@ -201,6 +202,7 @@ func (conf DiferenciaConfiguration) Print() {
 	fmt.Printf("Client Cert Path: %s\n", conf.ClientCert)
 	fmt.Printf("Client Key Path: %s\n", conf.ClientKey)
 	fmt.Printf("Prometheus Enabled: %t\n", conf.Prometheus)
+	fmt.Printf("Levenshtein Percentage: %d\n", conf.LevenshteinPercentage)
 	fmt.Printf("Force Plain Text: %t\n", conf.ForcePlainText)
 }
 
@@ -416,11 +418,11 @@ func compareResult(candidate, primary []byte, candidateStatus, primaryStatus int
 		case strings.HasPrefix(contentType, "application/json"):
 			return json.CompareDocuments(candidate, primary, Config.DifferenceMode.String())
 		case strings.HasPrefix(contentType, "text/plain"):
-			return bytes.Equal(candidate, primary)
+			return compareText(candidate, primary, Config.LevenshteinPercentage)
 		default:
 			{
 				if Config.ForcePlainText {
-					return bytes.Equal(candidate, primary)
+					return compareText(candidate, primary, Config.LevenshteinPercentage)
 				} else {
 					return json.CompareDocuments(candidate, primary, Config.DifferenceMode.String())
 				}
@@ -429,6 +431,15 @@ func compareResult(candidate, primary []byte, candidateStatus, primaryStatus int
 
 	}
 	return false
+}
+
+func compareText(candidate, primary []byte, levenshtein int) bool {
+	if levenshtein < 100 {
+		dif := int(plain.CalculateSimilarity(primary, candidate) * 100)
+		return dif > levenshtein
+	}
+
+	return bytes.Equal(candidate, primary)
 }
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {
