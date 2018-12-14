@@ -33,12 +33,8 @@ func main() {
 	var logLevel string
 	var insecureSkipVerify bool
 	var caCert, clientCert, clientKey string
-<<<<<<< HEAD
-	var forcePlainText bool
 	var levenshteinPercentage int
-=======
 	var forcePlainText, mirroring bool
->>>>>>> Adds mirroring feature
 
 	var adminPort int
 
@@ -68,11 +64,8 @@ func main() {
 			config.ClientKey = clientKey
 			config.AdminPort = adminPort
 			config.ForcePlainText = forcePlainText
-<<<<<<< HEAD
 			config.LevenshteinPercentage = levenshteinPercentage
-=======
 			config.Mirroring = mirroring
->>>>>>> Adds mirroring feature
 
 			differenceMode, err := core.NewDifference(difference)
 
@@ -132,12 +125,9 @@ func main() {
 	cmdStart.Flags().StringVar(&clientKey, "clientKey", "", "Client Key path (X509)")
 
 	cmdStart.Flags().BoolVar(&forcePlainText, "forcePlainText", false, "Force the received of content type as plain text instead of json")
-<<<<<<< HEAD
 	cmdStart.Flags().IntVar(&levenshteinPercentage, "levenshteinPercentage", 100, "Sets the minimum percentage to be equal in case of using plain text (40, 79, 90, ...)")
 
-=======
 	cmdStart.Flags().BoolVarP(&mirroring, "mirroring", "m", false, "Starts Diferencia in mirroring mode which means that the output provided is the one provided by primary")
->>>>>>> Adds mirroring feature
 	cmdStart.MarkFlagRequired("primary")
 	cmdStart.MarkFlagRequired("candidate")
 
