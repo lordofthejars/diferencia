@@ -161,6 +161,18 @@ These flags are `ignoreValues` and `ignoreValuesFile`.
 
 IMPORTANT: You need to have noise detection enabled to be able to specify manual noise cancellation.
 
+[#mirroring]
+== Mirroring
+
+Diferencia can be started as a mirrored proxy.
+In this mode Diferencia, the output of primary call is redirected to the caller. 
+
+The error is notified not as response but stored internally to be consumed by Prometheus or Rest call or UI.
+
+In this way you can use Diferencia for mirroring public traffic and checking for any regression.
+
+To enable it, you need to use `--mirroring` or `-m` as parameter.
+
 [#configuration]
 == Configuration
 
@@ -264,6 +276,11 @@ In next table you can see all possible configuration arguments that you can pass
 
 |--forcePlainText
 |Force plain text comparision if `Content-Type` is not set in response
+|boolean
+|false
+
+|--mirroring (-m)
+|Opens Diferencia in Mirroring mode which means that the output of primary is redirected to the caller. The error is notified not as response but stored internally to be consumed by Prometheus or Rest call or UI.
 |boolean
 |false
 |===

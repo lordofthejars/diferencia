@@ -95,6 +95,7 @@ type DiferenciaConfiguration struct {
 	AdminPort             int        `json:"adminPort,omitempty"`
 	ForcePlainText        bool       `json:"forcePlainText,omitempty"`
 	LevenshteinPercentage int        `json:"levenshteinPercentage,omitempty"`
+	Mirroring             bool       `json:"mirroring,omitempty"`
 }
 
 // UpdateConfiguration with configured params
@@ -204,6 +205,7 @@ func (conf DiferenciaConfiguration) Print() {
 	fmt.Printf("Prometheus Enabled: %t\n", conf.Prometheus)
 	fmt.Printf("Levenshtein Percentage: %d\n", conf.LevenshteinPercentage)
 	fmt.Printf("Force Plain Text: %t\n", conf.ForcePlainText)
+	fmt.Printf("Mirroring: %t\n", conf.Mirroring)
 }
 
 type DiferenciaError struct {
@@ -215,11 +217,26 @@ func (e *DiferenciaError) Error() string {
 	return fmt.Sprintf("with message: %s, and code %d", e.message, e.code)
 }
 
-func Diferencia(r *http.Request) (bool, error) {
+type communicationcontent struct {
+	content    []byte
+	statusCode int
+	header     http.Header
+	cookies    []*http.Cookie
+}
+
+func (c communicationcontent) isEmpty() bool {
+	return len(c.content) == 0 && c.statusCode == 0 && c.header == nil && len(c.cookies) == 0
+}
+
+func Diferencia(r *http.Request) (bool, communicationcontent, error) {
 
 	if !Config.AllowUnsafeOperations && !isSafeOperation(r.Method) {
-		logrus.Debugf("Unsafe operations are not allowed and %s method has been received", r.Method)
-		return false, &DiferenciaError{http.StatusMethodNotAllowed, fmt.Sprintf("Unsafe operations are not allowed and %s method has been received", r.Method)}
+		if !Config.Mirroring {
+			logrus.Debugf("Unsafe operations are not allowed and %s method has been received", r.Method)
+			return false, communicationcontent{}, &DiferenciaError{http.StatusMethodNotAllowed, fmt.Sprintf("Unsafe operations are not allowed and %s method has been received", r.Method)}
+		} else {
+			// Do the request and return as ok.
+		}
 	}
 
 	logrus.Debugf("URL %s is going to be processed", r.URL.String())
@@ -228,19 +245,19 @@ func Diferencia(r *http.Request) (bool, error) {
 	// Get request from primary
 	primaryFullURL := CreateUrl(*r.URL, Config.Primary)
 	logrus.Debugf("Forwarding call to %s", primaryFullURL)
-	primaryBodyContent, primaryStatus, primaryHeader, err := getContent(r, primaryFullURL)
+	primaryBodyContent, primaryStatus, primaryHeader, cookies, err := getContent(r, primaryFullURL)
 	if err != nil {
 		logrus.Errorf("Error while connecting to Primary site (%s) with %s", primaryFullURL, err.Error())
-		return false, &DiferenciaError{http.StatusServiceUnavailable, fmt.Sprintf("Error while connecting to Primary site (%s) with %s", primaryFullURL, err.Error())}
+		return false, communicationcontent{content: primaryBodyContent, statusCode: primaryStatus, header: primaryHeader, cookies: cookies}, &DiferenciaError{http.StatusServiceUnavailable, fmt.Sprintf("Error while connecting to Primary site (%s) with %s", primaryFullURL, err.Error())}
 	}
 
 	// Get candidate
 	candidateFullURL := CreateUrl(*r.URL, Config.Candidate)
 	logrus.Debugf("Forwarding call to %s", candidateFullURL)
-	candidateBodyContent, candidateStatus, candidateHeader, err := getContent(r, candidateFullURL)
+	candidateBodyContent, candidateStatus, candidateHeader, _, err := getContent(r, candidateFullURL)
 	if err != nil {
 		logrus.Errorf("Error while connecting to Candidate site (%s) with %s", candidateFullURL, err.Error())
-		return false, &DiferenciaError{http.StatusServiceUnavailable, fmt.Sprintf("Error while connecting to Candidate site (%s) with %s", candidateFullURL, err.Error())}
+		return false, communicationcontent{content: primaryBodyContent, statusCode: primaryStatus, header: primaryHeader, cookies: cookies}, &DiferenciaError{http.StatusServiceUnavailable, fmt.Sprintf("Error while connecting to Candidate site (%s) with %s", candidateFullURL, err.Error())}
 	}
 
 	var result bool
@@ -252,10 +269,10 @@ func Diferencia(r *http.Request) (bool, error) {
 		// Get secondary to do the noise cancellation
 		secondaryFullURL := CreateUrl(*r.URL, Config.Secondary)
 		logrus.Debugf("Forwarding call to %s", secondaryFullURL)
-		secondaryBodyContent, secondaryStatus, _, err := getContent(r, secondaryFullURL)
+		secondaryBodyContent, secondaryStatus, _, _, err := getContent(r, secondaryFullURL)
 		if err != nil {
 			logrus.Errorf("Error while connecting to Secondary site (%s) with error %s", candidateFullURL, err.Error())
-			return false, &DiferenciaError{http.StatusServiceUnavailable, fmt.Sprintf("Error while connecting to Secondary site (%s) with error %s", candidateFullURL, err.Error())}
+			return false, communicationcontent{content: primaryBodyContent, statusCode: primaryStatus, header: primaryHeader, cookies: cookies}, &DiferenciaError{http.StatusServiceUnavailable, fmt.Sprintf("Error while connecting to Secondary site (%s) with error %s", candidateFullURL, err.Error())}
 		}
 		// If status code is equal then we detect noise and and remove from primary and candidate
 		// What to do in case of two identical status code but no body content (404) might be still valid since you are testing that nothing is there
@@ -280,12 +297,12 @@ func Diferencia(r *http.Request) (bool, error) {
 
 			if err != nil {
 				logrus.Error("Error detecting noise between %s and %s. (%s)", primaryFullURL, secondaryFullURL, err.Error())
-				return false, &DiferenciaError{http.StatusBadRequest, fmt.Sprintf("Error detecting noise between %s and %s. (%s)", primaryFullURL, secondaryFullURL, err.Error())}
+				return false, communicationcontent{content: primaryBodyContent, statusCode: primaryStatus, header: primaryHeader, cookies: cookies}, &DiferenciaError{http.StatusBadRequest, fmt.Sprintf("Error detecting noise between %s and %s. (%s)", primaryFullURL, secondaryFullURL, err.Error())}
 			}
 
 		} else {
 			logrus.Errorf("Status code between %s(%d) and %s(%d) are different", primaryFullURL, primaryStatus, secondaryFullURL, secondaryStatus)
-			return false, &DiferenciaError{http.StatusBadRequest, fmt.Sprintf("Status code between %s(%d) and %s(%d) are different", primaryFullURL, primaryStatus, secondaryFullURL, secondaryStatus)}
+			return false, communicationcontent{content: primaryBodyContent, statusCode: primaryStatus, header: primaryHeader, cookies: cookies}, &DiferenciaError{http.StatusBadRequest, fmt.Sprintf("Status code between %s(%d) and %s(%d) are different", primaryFullURL, primaryStatus, secondaryFullURL, secondaryStatus)}
 		}
 	}
 
@@ -325,7 +342,7 @@ func Diferencia(r *http.Request) (bool, error) {
 		logrus.Debugf("************************")
 	}
 
-	return result, nil
+	return result, communicationcontent{content: primaryBodyContent, statusCode: primaryStatus, header: primaryHeader, cookies: cookies}, nil
 
 }
 
@@ -451,7 +468,7 @@ func diferenciaHandler(w http.ResponseWriter, r *http.Request) {
 
 	mutex.Lock()
 	defer mutex.Unlock()
-	result, err := Diferencia(r)
+	result, primaryCommunication, err := Diferencia(r)
 	if err != nil {
 		if de, ok := err.(*DiferenciaError); ok {
 			w.WriteHeader(de.code)
@@ -463,10 +480,18 @@ func diferenciaHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if result {
-		w.WriteHeader(http.StatusOK)
+		if Config.Mirroring {
+			MirrorResponse(primaryCommunication, w)
+		} else {
+			w.WriteHeader(http.StatusOK)
+		}
 	} else {
 		// If there is a regression
-		w.WriteHeader(http.StatusPreconditionFailed)
+		if Config.Mirroring {
+			MirrorResponse(primaryCommunication, w)
+		} else {
+			w.WriteHeader(http.StatusPreconditionFailed)
+		}
 		if Config.Prometheus {
 			prometheusCounter.WithLabelValues(r.Method, r.URL.Path).Inc()
 		}
@@ -478,18 +503,18 @@ func isSafeOperation(method string) bool {
 	return method == http.MethodGet || method == http.MethodOptions || method == http.MethodHead
 }
 
-func getContent(r *http.Request, url string) ([]byte, int, http.Header, error) {
+func getContent(r *http.Request, url string) ([]byte, int, http.Header, []*http.Cookie, error) {
 	resp, err := HttpClient.MakeRequest(r, url)
 
 	if err != nil {
 		// In case of error in service we should add as metrics as well or assume that the service itself would communicate to metrics?
-		return make([]byte, 0), 0, nil, err
+		return make([]byte, 0), 0, nil, nil, err
 	}
 
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	defer resp.Body.Close()
 
-	return bodyBytes, resp.StatusCode, resp.Header, err
+	return bodyBytes, resp.StatusCode, resp.Header, resp.Cookies(), err
 
 }
 
