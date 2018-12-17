@@ -5,6 +5,10 @@ install:
 	dep ensure
 	packr build -o diferencia
 
+.PHONY: test
+test:
+	go test -v -race $(go list ./... | grep -v "/vendor/")
+
 .PHONY: build
 build:
 	packr build -o diferencia

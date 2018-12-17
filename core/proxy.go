@@ -217,23 +217,23 @@ func (e *DiferenciaError) Error() string {
 	return fmt.Sprintf("with message: %s, and code %d", e.message, e.code)
 }
 
-type communicationcontent struct {
-	content    []byte
-	statusCode int
-	header     http.Header
-	cookies    []*http.Cookie
+type Communicationcontent struct {
+	Content    []byte
+	StatusCode int
+	Header     http.Header
+	Cookies    []*http.Cookie
 }
 
-func (c communicationcontent) isEmpty() bool {
-	return len(c.content) == 0 && c.statusCode == 0 && c.header == nil && len(c.cookies) == 0
+func (c Communicationcontent) isEmpty() bool {
+	return len(c.Content) == 0 && c.StatusCode == 0 && c.Header == nil && len(c.Cookies) == 0
 }
 
-func Diferencia(r *http.Request) (bool, communicationcontent, error) {
+func Diferencia(r *http.Request) (bool, Communicationcontent, error) {
 
 	if !Config.AllowUnsafeOperations && !isSafeOperation(r.Method) {
 		if !Config.Mirroring {
 			logrus.Debugf("Unsafe operations are not allowed and %s method has been received", r.Method)
-			return false, communicationcontent{}, &DiferenciaError{http.StatusMethodNotAllowed, fmt.Sprintf("Unsafe operations are not allowed and %s method has been received", r.Method)}
+			return false, Communicationcontent{}, &DiferenciaError{http.StatusMethodNotAllowed, fmt.Sprintf("Unsafe operations are not allowed and %s method has been received", r.Method)}
 		} else {
 			// Do the request and return as ok.
 		}
@@ -248,7 +248,7 @@ func Diferencia(r *http.Request) (bool, communicationcontent, error) {
 	primaryBodyContent, primaryStatus, primaryHeader, cookies, err := getContent(r, primaryFullURL)
 	if err != nil {
 		logrus.Errorf("Error while connecting to Primary site (%s) with %s", primaryFullURL, err.Error())
-		return false, communicationcontent{content: primaryBodyContent, statusCode: primaryStatus, header: primaryHeader, cookies: cookies}, &DiferenciaError{http.StatusServiceUnavailable, fmt.Sprintf("Error while connecting to Primary site (%s) with %s", primaryFullURL, err.Error())}
+		return false, Communicationcontent{Content: primaryBodyContent, StatusCode: primaryStatus, Header: primaryHeader, Cookies: cookies}, &DiferenciaError{http.StatusServiceUnavailable, fmt.Sprintf("Error while connecting to Primary site (%s) with %s", primaryFullURL, err.Error())}
 	}
 
 	// Get candidate
@@ -257,7 +257,7 @@ func Diferencia(r *http.Request) (bool, communicationcontent, error) {
 	candidateBodyContent, candidateStatus, candidateHeader, _, err := getContent(r, candidateFullURL)
 	if err != nil {
 		logrus.Errorf("Error while connecting to Candidate site (%s) with %s", candidateFullURL, err.Error())
-		return false, communicationcontent{content: primaryBodyContent, statusCode: primaryStatus, header: primaryHeader, cookies: cookies}, &DiferenciaError{http.StatusServiceUnavailable, fmt.Sprintf("Error while connecting to Candidate site (%s) with %s", candidateFullURL, err.Error())}
+		return false, Communicationcontent{Content: primaryBodyContent, StatusCode: primaryStatus, Header: primaryHeader, Cookies: cookies}, &DiferenciaError{http.StatusServiceUnavailable, fmt.Sprintf("Error while connecting to Candidate site (%s) with %s", candidateFullURL, err.Error())}
 	}
 
 	var result bool
@@ -272,7 +272,7 @@ func Diferencia(r *http.Request) (bool, communicationcontent, error) {
 		secondaryBodyContent, secondaryStatus, _, _, err := getContent(r, secondaryFullURL)
 		if err != nil {
 			logrus.Errorf("Error while connecting to Secondary site (%s) with error %s", candidateFullURL, err.Error())
-			return false, communicationcontent{content: primaryBodyContent, statusCode: primaryStatus, header: primaryHeader, cookies: cookies}, &DiferenciaError{http.StatusServiceUnavailable, fmt.Sprintf("Error while connecting to Secondary site (%s) with error %s", candidateFullURL, err.Error())}
+			return false, Communicationcontent{Content: primaryBodyContent, StatusCode: primaryStatus, Header: primaryHeader, Cookies: cookies}, &DiferenciaError{http.StatusServiceUnavailable, fmt.Sprintf("Error while connecting to Secondary site (%s) with error %s", candidateFullURL, err.Error())}
 		}
 		// If status code is equal then we detect noise and and remove from primary and candidate
 		// What to do in case of two identical status code but no body content (404) might be still valid since you are testing that nothing is there
@@ -297,12 +297,12 @@ func Diferencia(r *http.Request) (bool, communicationcontent, error) {
 
 			if err != nil {
 				logrus.Error("Error detecting noise between %s and %s. (%s)", primaryFullURL, secondaryFullURL, err.Error())
-				return false, communicationcontent{content: primaryBodyContent, statusCode: primaryStatus, header: primaryHeader, cookies: cookies}, &DiferenciaError{http.StatusBadRequest, fmt.Sprintf("Error detecting noise between %s and %s. (%s)", primaryFullURL, secondaryFullURL, err.Error())}
+				return false, Communicationcontent{Content: primaryBodyContent, StatusCode: primaryStatus, Header: primaryHeader, Cookies: cookies}, &DiferenciaError{http.StatusBadRequest, fmt.Sprintf("Error detecting noise between %s and %s. (%s)", primaryFullURL, secondaryFullURL, err.Error())}
 			}
 
 		} else {
 			logrus.Errorf("Status code between %s(%d) and %s(%d) are different", primaryFullURL, primaryStatus, secondaryFullURL, secondaryStatus)
-			return false, communicationcontent{content: primaryBodyContent, statusCode: primaryStatus, header: primaryHeader, cookies: cookies}, &DiferenciaError{http.StatusBadRequest, fmt.Sprintf("Status code between %s(%d) and %s(%d) are different", primaryFullURL, primaryStatus, secondaryFullURL, secondaryStatus)}
+			return false, Communicationcontent{Content: primaryBodyContent, StatusCode: primaryStatus, Header: primaryHeader, Cookies: cookies}, &DiferenciaError{http.StatusBadRequest, fmt.Sprintf("Status code between %s(%d) and %s(%d) are different", primaryFullURL, primaryStatus, secondaryFullURL, secondaryStatus)}
 		}
 	}
 
@@ -342,7 +342,7 @@ func Diferencia(r *http.Request) (bool, communicationcontent, error) {
 		logrus.Debugf("************************")
 	}
 
-	return result, communicationcontent{content: primaryBodyContent, statusCode: primaryStatus, header: primaryHeader, cookies: cookies}, nil
+	return result, Communicationcontent{Content: primaryBodyContent, StatusCode: primaryStatus, Header: primaryHeader, Cookies: cookies}, nil
 
 }
 

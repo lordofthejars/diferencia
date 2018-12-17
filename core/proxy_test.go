@@ -161,6 +161,45 @@ var _ = Describe("Proxy", func() {
 		})
 	})
 
+	Describe("Diferencia with mirroring", func() {
+		Context("Return Content ", func() {
+			It("should return primary content", func() {
+				// Given
+				var httpClient = &StubHttpClient{}
+				// Record Http Client responses
+				recordContent(httpClient, "test_fixtures/document-a.json", "test_fixtures/document-a.json")
+				recordStatus(httpClient, 200, 200)
+				core.HttpClient = httpClient
+
+				// Prepare Configuration object
+				conf := &core.DiferenciaConfiguration{
+					Port:                  8080,
+					Primary:               "http://now.httpbin.org/",
+					Candidate:             "http://now.httpbin.org/",
+					StoreResults:          "",
+					DifferenceMode:        core.Strict,
+					NoiseDetection:        false,
+					AllowUnsafeOperations: false,
+				}
+				core.Config = conf
+
+				// Create stubbed http.Request object
+				url, _ := url.Parse("http://localhost:8080")
+				request := createRequest(http.MethodGet, url)
+
+				// When
+
+				result, communicationcontent, err := core.Diferencia(&request)
+
+				//Then
+
+				Expect(result).Should(Equal(true))
+				Expect(err).Should(Succeed())
+				Expect(string(communicationcontent.Content[:])).Should(Equal(loadFromFile("test_fixtures/document-a.json")))
+			})
+		})
+	})
+
 	Describe("Run Diferencia", func() {
 		Context("Without noise reduction", func() {
 			It("should return true if both documents are equal", func() {
@@ -190,7 +229,7 @@ var _ = Describe("Proxy", func() {
 
 				// When
 
-				result, err := core.Diferencia(&request)
+				result, _, err := core.Diferencia(&request)
 
 				//Then
 
@@ -223,7 +262,7 @@ var _ = Describe("Proxy", func() {
 
 				// When
 
-				result, err := core.Diferencia(&request)
+				result, _, err := core.Diferencia(&request)
 
 				//Then
 
@@ -257,7 +296,7 @@ var _ = Describe("Proxy", func() {
 
 				// When
 
-				result, err := core.Diferencia(&request)
+				result, _, err := core.Diferencia(&request)
 
 				//Then
 
@@ -295,7 +334,7 @@ var _ = Describe("Proxy", func() {
 
 				// When
 
-				result, err := core.Diferencia(&request)
+				result, _, err := core.Diferencia(&request)
 
 				//Then
 
@@ -331,7 +370,7 @@ var _ = Describe("Proxy", func() {
 				request := createRequest(http.MethodGet, url)
 
 				// When
-				result, err := core.Diferencia(&request)
+				result, _, err := core.Diferencia(&request)
 
 				//Then
 
@@ -366,7 +405,7 @@ var _ = Describe("Proxy", func() {
 				request := createRequest(http.MethodGet, url)
 
 				// When
-				result, err := core.Diferencia(&request)
+				result, _, err := core.Diferencia(&request)
 
 				//Then
 
@@ -403,7 +442,7 @@ var _ = Describe("Proxy", func() {
 
 				// When
 
-				result, err := core.Diferencia(&request)
+				result, _, err := core.Diferencia(&request)
 
 				//Then
 
@@ -447,7 +486,7 @@ var _ = Describe("Proxy", func() {
 
 				// When
 
-				result, err := core.Diferencia(&request)
+				result, _, err := core.Diferencia(&request)
 
 				//Then
 
@@ -489,7 +528,7 @@ var _ = Describe("Proxy", func() {
 
 				// When
 
-				result, err := core.Diferencia(&request)
+				result, _, err := core.Diferencia(&request)
 
 				//Then
 

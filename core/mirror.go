@@ -7,11 +7,18 @@ import (
 )
 
 // MirrorResponse to response
-func MirrorResponse(primaryCommunication communicationcontent, w http.ResponseWriter) {
-	copyHeader(w.Header(), primaryCommunication.header)
-	w.WriteHeader(primaryCommunication.statusCode)
-	r := bytes.NewReader(primaryCommunication.content)
+func MirrorResponse(primaryCommunication Communicationcontent, w http.ResponseWriter) {
+	copyHeader(w.Header(), primaryCommunication.Header)
+	w.WriteHeader(primaryCommunication.StatusCode)
+	setCookies(w, primaryCommunication.Cookies)
+	r := bytes.NewReader(primaryCommunication.Content)
 	io.Copy(w, r)
+}
+
+func setCookies(w http.ResponseWriter, cookies []*http.Cookie) {
+	for _, cookie := range cookies {
+		http.SetCookie(w, cookie)
+	}
 }
 
 func copyHeader(dst, src http.Header) {
