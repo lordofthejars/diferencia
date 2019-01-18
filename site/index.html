@@ -5,12 +5,12 @@
   <meta charset="utf-8">
   <title>Builds Summary</title>
 
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/patternfly/3.42.0/css/patternfly.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/patternfly/3.42.0/css/patternfly-additions.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/patternfly/3.59.1/css/patternfly.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/patternfly/3.59.1/css/patternfly-additions.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.0/d3.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.11/c3.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/patternfly/3.42.0/js/patternfly.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/patternfly/3.59.1/js/patternfly.min.js"></script>
 </head>
 
 <body class="cards-pf">
@@ -68,6 +68,8 @@
                     <dd>{{.Configuration.IgnoreHeadersValues}}</dd>
                     <dt>Allow Unsafe Operations</dt>
                     <dd>{{.Configuration.AllowUnsafeOperations}}</dd>
+                    <dt>Return Result</dt>
+                    <dd>{{.Configuration.ReturnResult}}</dd>
                   </dl>
                 </div>
             </div>
@@ -88,10 +90,22 @@
               {{.Endpoint.Method}} - {{.Endpoint.Path}}
             </h2>
             <div class="card-pf-items text-center">
-              <div class="card-pf-item">
-                <span style="color:red" class="fa fa-times-circle"></span>
-                <span class="card-pf-item-text">{{.Errors}}</span>
-              </div>
+                <div class="card-pf-item">
+                    <span style="color:green" class="fa fa-check-circle"></span>
+                    <span class="card-pf-item-text">{{.Success}}</span>
+                </div>
+                <div class="card-pf-item">
+                    <span style="color:red" class="fa fa-times-circle"></span>
+                    <span class="card-pf-item-text">{{.Errors}}</span>
+                </div>
+                <p class="card-pf-info text-center">
+                        Primary:
+                        <span class="card-pf-item-text">{{.AveragePrimaryDuration}}ms</span>
+                        <br/>
+                        Candidate:
+                        <span class="card-pf-item-text">{{.AverageCandidateDuration}}ms</span>
+                </p>
+                </div>
             </div>
           </div>
         </div>

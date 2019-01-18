@@ -3,6 +3,7 @@ package core
 import (
 	"bufio"
 	"bytes"
+	jsonenc "encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/lordofthejars/diferencia/difference/header"
 	"github.com/lordofthejars/diferencia/difference/plain"
@@ -96,10 +98,19 @@ type DiferenciaConfiguration struct {
 	ForcePlainText        bool       `json:"forcePlainText,omitempty"`
 	LevenshteinPercentage int        `json:"levenshteinPercentage,omitempty"`
 	Mirroring             bool       `json:"mirroring,omitempty"`
+	ReturnResult          bool       `json:"returnResult,omitempty"`
 }
 
 // UpdateConfiguration with configured params
 func (conf *DiferenciaConfiguration) UpdateConfiguration(updateConfig DiferenciaConfigurationUpdate) error {
+
+	if updateConfig.isReturnResultSet() {
+		returnResult, err := updateConfig.getReturnResult()
+		if err != nil {
+			return err
+		}
+		conf.ReturnResult = returnResult
+	}
 
 	if updateConfig.isServiceNameSet() {
 		conf.SetServiceName(updateConfig.ServiceName)
@@ -206,6 +217,7 @@ func (conf DiferenciaConfiguration) Print() {
 	fmt.Printf("Levenshtein Percentage: %d\n", conf.LevenshteinPercentage)
 	fmt.Printf("Force Plain Text: %t\n", conf.ForcePlainText)
 	fmt.Printf("Mirroring: %t\n", conf.Mirroring)
+	fmt.Printf("Return Result: %t\n", conf.ReturnResult)
 }
 
 type DiferenciaError struct {
@@ -228,12 +240,32 @@ func (c Communicationcontent) isEmpty() bool {
 	return len(c.Content) == 0 && c.StatusCode == 0 && c.Header == nil && len(c.Cookies) == 0
 }
 
-func Diferencia(r *http.Request) (bool, Communicationcontent, error) {
+// Result struct
+type Result struct {
+	EqualContent         bool
+	PrimaryElapsedTime   time.Duration
+	CandidateElapsedTime time.Duration
+}
+
+// MarshallJson translate object to byte[]
+func (r Result) MarshallJson() ([]byte, error) {
+	return jsonenc.Marshal(struct {
+		Result                   bool
+		PrimaryElapsedTimeNano   int64
+		CandidateElapsedTimeNano int64
+	}{
+		Result:                   r.EqualContent,
+		PrimaryElapsedTimeNano:   r.PrimaryElapsedTime.Nanoseconds(),
+		CandidateElapsedTimeNano: r.CandidateElapsedTime.Nanoseconds(),
+	})
+}
+
+func Diferencia(r *http.Request) (Result, Communicationcontent, error) {
 
 	if !Config.AllowUnsafeOperations && !isSafeOperation(r.Method) {
 		if !Config.Mirroring {
 			logrus.Debugf("Unsafe operations are not allowed and %s method has been received", r.Method)
-			return false, Communicationcontent{}, &DiferenciaError{http.StatusMethodNotAllowed, fmt.Sprintf("Unsafe operations are not allowed and %s method has been received", r.Method)}
+			return Result{EqualContent: false}, Communicationcontent{}, &DiferenciaError{http.StatusMethodNotAllowed, fmt.Sprintf("Unsafe operations are not allowed and %s method has been received", r.Method)}
 		} else {
 			// Do the request and return as ok.
 		}
@@ -245,19 +277,23 @@ func Diferencia(r *http.Request) (bool, Communicationcontent, error) {
 	// Get request from primary
 	primaryFullURL := CreateUrl(*r.URL, Config.Primary)
 	logrus.Debugf("Forwarding call to %s", primaryFullURL)
+	primaryStartTime := time.Now()
 	primaryBodyContent, primaryStatus, primaryHeader, cookies, err := getContent(r, primaryFullURL)
+	primaryElapsedDuration := time.Now().Sub(primaryStartTime)
 	if err != nil {
 		logrus.Errorf("Error while connecting to Primary site (%s) with %s", primaryFullURL, err.Error())
-		return false, Communicationcontent{Content: primaryBodyContent, StatusCode: primaryStatus, Header: primaryHeader, Cookies: cookies}, &DiferenciaError{http.StatusServiceUnavailable, fmt.Sprintf("Error while connecting to Primary site (%s) with %s", primaryFullURL, err.Error())}
+		return Result{EqualContent: false}, Communicationcontent{Content: primaryBodyContent, StatusCode: primaryStatus, Header: primaryHeader, Cookies: cookies}, &DiferenciaError{http.StatusServiceUnavailable, fmt.Sprintf("Error while connecting to Primary site (%s) with %s", primaryFullURL, err.Error())}
 	}
 
 	// Get candidate
 	candidateFullURL := CreateUrl(*r.URL, Config.Candidate)
 	logrus.Debugf("Forwarding call to %s", candidateFullURL)
+	candidateStartTime := time.Now()
 	candidateBodyContent, candidateStatus, candidateHeader, _, err := getContent(r, candidateFullURL)
+	candidateElapsedDuration := time.Now().Sub(candidateStartTime)
 	if err != nil {
 		logrus.Errorf("Error while connecting to Candidate site (%s) with %s", candidateFullURL, err.Error())
-		return false, Communicationcontent{Content: primaryBodyContent, StatusCode: primaryStatus, Header: primaryHeader, Cookies: cookies}, &DiferenciaError{http.StatusServiceUnavailable, fmt.Sprintf("Error while connecting to Candidate site (%s) with %s", candidateFullURL, err.Error())}
+		return Result{EqualContent: false}, Communicationcontent{Content: primaryBodyContent, StatusCode: primaryStatus, Header: primaryHeader, Cookies: cookies}, &DiferenciaError{http.StatusServiceUnavailable, fmt.Sprintf("Error while connecting to Candidate site (%s) with %s", candidateFullURL, err.Error())}
 	}
 
 	var result bool
@@ -272,7 +308,7 @@ func Diferencia(r *http.Request) (bool, Communicationcontent, error) {
 		secondaryBodyContent, secondaryStatus, _, _, err := getContent(r, secondaryFullURL)
 		if err != nil {
 			logrus.Errorf("Error while connecting to Secondary site (%s) with error %s", candidateFullURL, err.Error())
-			return false, Communicationcontent{Content: primaryBodyContent, StatusCode: primaryStatus, Header: primaryHeader, Cookies: cookies}, &DiferenciaError{http.StatusServiceUnavailable, fmt.Sprintf("Error while connecting to Secondary site (%s) with error %s", candidateFullURL, err.Error())}
+			return Result{EqualContent: false}, Communicationcontent{Content: primaryBodyContent, StatusCode: primaryStatus, Header: primaryHeader, Cookies: cookies}, &DiferenciaError{http.StatusServiceUnavailable, fmt.Sprintf("Error while connecting to Secondary site (%s) with error %s", candidateFullURL, err.Error())}
 		}
 		// If status code is equal then we detect noise and and remove from primary and candidate
 		// What to do in case of two identical status code but no body content (404) might be still valid since you are testing that nothing is there
@@ -297,12 +333,12 @@ func Diferencia(r *http.Request) (bool, Communicationcontent, error) {
 
 			if err != nil {
 				logrus.Error("Error detecting noise between %s and %s. (%s)", primaryFullURL, secondaryFullURL, err.Error())
-				return false, Communicationcontent{Content: primaryBodyContent, StatusCode: primaryStatus, Header: primaryHeader, Cookies: cookies}, &DiferenciaError{http.StatusBadRequest, fmt.Sprintf("Error detecting noise between %s and %s. (%s)", primaryFullURL, secondaryFullURL, err.Error())}
+				return Result{EqualContent: false}, Communicationcontent{Content: primaryBodyContent, StatusCode: primaryStatus, Header: primaryHeader, Cookies: cookies}, &DiferenciaError{http.StatusBadRequest, fmt.Sprintf("Error detecting noise between %s and %s. (%s)", primaryFullURL, secondaryFullURL, err.Error())}
 			}
 
 		} else {
 			logrus.Errorf("Status code between %s(%d) and %s(%d) are different", primaryFullURL, primaryStatus, secondaryFullURL, secondaryStatus)
-			return false, Communicationcontent{Content: primaryBodyContent, StatusCode: primaryStatus, Header: primaryHeader, Cookies: cookies}, &DiferenciaError{http.StatusBadRequest, fmt.Sprintf("Status code between %s(%d) and %s(%d) are different", primaryFullURL, primaryStatus, secondaryFullURL, secondaryStatus)}
+			return Result{EqualContent: false}, Communicationcontent{Content: primaryBodyContent, StatusCode: primaryStatus, Header: primaryHeader, Cookies: cookies}, &DiferenciaError{http.StatusBadRequest, fmt.Sprintf("Status code between %s(%d) and %s(%d) are different", primaryFullURL, primaryStatus, secondaryFullURL, secondaryStatus)}
 		}
 	}
 
@@ -329,6 +365,7 @@ func Diferencia(r *http.Request) (bool, Communicationcontent, error) {
 		logrus.Debugf("************************")
 		logrus.Debugf("Explanation of Failure:")
 		logrus.Debugf("Primary Status Code: %d Candidate StatusCode: %d", primaryStatus, candidateStatus)
+		logrus.Debugf("Primary time: %s Candidate Time: %s", primaryElapsedDuration, candidateElapsedDuration)
 		logrus.Debugf("Primary Content:")
 		logrus.Debugf(string(primaryBodyContent[:]))
 		logrus.Debugf("Candidate Content:")
@@ -342,7 +379,7 @@ func Diferencia(r *http.Request) (bool, Communicationcontent, error) {
 		logrus.Debugf("************************")
 	}
 
-	return result, Communicationcontent{Content: primaryBodyContent, StatusCode: primaryStatus, Header: primaryHeader, Cookies: cookies}, nil
+	return Result{EqualContent: result, PrimaryElapsedTime: primaryElapsedDuration, CandidateElapsedTime: candidateElapsedDuration}, Communicationcontent{Content: primaryBodyContent, StatusCode: primaryStatus, Header: primaryHeader, Cookies: cookies}, nil
 
 }
 
@@ -479,12 +516,17 @@ func diferenciaHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, err.Error())
 	}
 
-	if result {
+	if result.EqualContent {
 		if Config.Mirroring {
 			MirrorResponse(primaryCommunication, w)
 		} else {
 			w.WriteHeader(http.StatusOK)
+			if Config.ReturnResult {
+				content, _ := result.MarshallJson()
+				w.Write(content)
+			}
 		}
+		exporter.IncrementSuccess(r.Method, r.URL.Path, result.PrimaryElapsedTime, result.CandidateElapsedTime)
 	} else {
 		// If there is a regression
 		if Config.Mirroring {

@@ -14,6 +14,7 @@ type DiferenciaConfigurationUpdate struct {
 	Candidate      string `json:"candidate,omitempty"`
 	NoiseDetection string `json:"noiseDetection,omitempty"`
 	Mode           string `json:"mode,omitempty"`
+	ReturnResult   string `json:"returnResult,omitempty"`
 }
 
 func (config DiferenciaConfigurationUpdate) isServiceNameSet() bool {
@@ -38,6 +39,14 @@ func (config DiferenciaConfigurationUpdate) isNoiseDetectionSet() bool {
 
 func (config DiferenciaConfigurationUpdate) isModeSet() bool {
 	return len(config.Mode) > 0
+}
+
+func (config DiferenciaConfigurationUpdate) isReturnResultSet() bool {
+	return len(config.ReturnResult) > 0
+}
+
+func (config DiferenciaConfigurationUpdate) getReturnResult() (bool, error) {
+	return strconv.ParseBool(config.ReturnResult)
 }
 
 func (config DiferenciaConfigurationUpdate) getMode() (Difference, error) {

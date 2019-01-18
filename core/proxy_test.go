@@ -193,7 +193,7 @@ var _ = Describe("Proxy", func() {
 
 				//Then
 
-				Expect(result).Should(Equal(true))
+				Expect(result.EqualContent).Should(Equal(true))
 				Expect(err).Should(Succeed())
 				Expect(string(communicationcontent.Content[:])).Should(Equal(loadFromFile("test_fixtures/document-a.json")))
 			})
@@ -233,7 +233,43 @@ var _ = Describe("Proxy", func() {
 
 				//Then
 
-				Expect(result).Should(Equal(true))
+				Expect(result.EqualContent).Should(Equal(true))
+				Expect(err).Should(Succeed())
+			})
+			It("should return duration of calls", func() {
+
+				// Given
+				var httpClient = &StubHttpClient{}
+				// Record Http Client responses
+				recordContent(httpClient, "test_fixtures/document-a.json", "test_fixtures/document-a.json")
+				recordStatus(httpClient, 200, 200)
+				core.HttpClient = httpClient
+
+				// Prepare Configuration object
+				conf := &core.DiferenciaConfiguration{
+					Port:                  8080,
+					Primary:               "http://now.httpbin.org/",
+					Candidate:             "http://now.httpbin.org/",
+					StoreResults:          "",
+					DifferenceMode:        core.Strict,
+					NoiseDetection:        false,
+					AllowUnsafeOperations: false,
+				}
+				core.Config = conf
+
+				// Create stubbed http.Request object
+				url, _ := url.Parse("http://localhost:8080")
+				request := createRequest(http.MethodGet, url)
+
+				// When
+
+				result, _, err := core.Diferencia(&request)
+
+				//Then
+
+				Expect(result.EqualContent).Should(Equal(true))
+				Expect(result.PrimaryElapsedTime).Should(BeNumerically(">", 0))
+				Expect(result.CandidateElapsedTime).Should(BeNumerically(">", 0))
 				Expect(err).Should(Succeed())
 			})
 			It("should return false if status code are different", func() {
@@ -266,7 +302,7 @@ var _ = Describe("Proxy", func() {
 
 				//Then
 
-				Expect(result).Should(Equal(false))
+				Expect(result.EqualContent).Should(Equal(false))
 				Expect(err).Should(Succeed())
 			})
 			It("should return false if both documents are different", func() {
@@ -300,7 +336,7 @@ var _ = Describe("Proxy", func() {
 
 				//Then
 
-				Expect(result).Should(Equal(false))
+				Expect(result.EqualContent).Should(Equal(false))
 				Expect(err).Should(Succeed())
 			})
 		})
@@ -338,7 +374,7 @@ var _ = Describe("Proxy", func() {
 
 				//Then
 
-				Expect(result).Should(Equal(true))
+				Expect(result.EqualContent).Should(Equal(true))
 				Expect(err).Should(Succeed())
 			})
 
@@ -374,7 +410,7 @@ var _ = Describe("Proxy", func() {
 
 				//Then
 
-				Expect(result).Should(Equal(true))
+				Expect(result.EqualContent).Should(Equal(true))
 				Expect(err).Should(Succeed())
 			})
 			It("should return true if both documents are same but with different values not detected by automatic noise reduction but by manual file", func() {
@@ -409,7 +445,7 @@ var _ = Describe("Proxy", func() {
 
 				//Then
 
-				Expect(result).Should(Equal(true))
+				Expect(result.EqualContent).Should(Equal(true))
 				Expect(err).Should(Succeed())
 			})
 		})
@@ -446,7 +482,7 @@ var _ = Describe("Proxy", func() {
 
 				//Then
 
-				Expect(result).Should(Equal(false))
+				Expect(result.EqualContent).Should(Equal(false))
 				Expect(err).Should(HaveOccurred())
 			})
 		})
@@ -490,11 +526,11 @@ var _ = Describe("Proxy", func() {
 
 				//Then
 
-				Expect(result).Should(Equal(true))
+				Expect(result.EqualContent).Should(Equal(true))
 				Expect(err).Should(Succeed())
 			})
 
-			It("should return false if documents is equal but not headers", func() {
+			It("should return false if documents are equal but not headers", func() {
 				// Given
 				var httpClient = &StubHttpClient{}
 				// Record Http Client responses
@@ -532,7 +568,7 @@ var _ = Describe("Proxy", func() {
 
 				//Then
 
-				Expect(result).Should(Equal(false))
+				Expect(result.EqualContent).Should(Equal(false))
 				Expect(err).Should(Succeed())
 			})
 		})
