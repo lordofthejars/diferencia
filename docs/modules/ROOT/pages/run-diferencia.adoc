@@ -283,4 +283,9 @@ In next table you can see all possible configuration arguments that you can pass
 |Opens Diferencia in Mirroring mode which means that the output of primary is redirected to the caller. The error is notified not as response but stored internally to be consumed by Prometheus or Rest call or UI.
 |boolean
 |false
+
+|--returnResult
+|Set Diferencia to return all avalable information about the current comparision and not only the http status code.
+|boolean
+|false
 |===
