@@ -35,6 +35,7 @@ func main() {
 	var caCert, clientCert, clientKey string
 	var levenshteinPercentage int
 	var forcePlainText, mirroring bool
+	var returnResult bool
 
 	var adminPort int
 
@@ -66,6 +67,7 @@ func main() {
 			config.ForcePlainText = forcePlainText
 			config.LevenshteinPercentage = levenshteinPercentage
 			config.Mirroring = mirroring
+			config.ReturnResult = returnResult
 
 			differenceMode, err := core.NewDifference(difference)
 
@@ -74,6 +76,11 @@ func main() {
 				os.Exit(1)
 			}
 			config.DifferenceMode = differenceMode
+
+			if mirroring && returnResult {
+				logrus.Errorf("You cannot set Returning Result of comparision and mirroring at the same time.")
+				os.Exit(1)
+			}
 
 			if !areHttpsClientAttributesCorrect(caCert, clientCert, clientKey) {
 				logrus.Errorf("Https Client options should either not provided or all of them provided but not only some. caCert: %s, clientCert: %s, clientkey: %s.", caCert, clientCert, clientKey)
@@ -128,6 +135,7 @@ func main() {
 	cmdStart.Flags().IntVar(&levenshteinPercentage, "levenshteinPercentage", 100, "Sets the minimum percentage to be equal in case of using plain text (40, 79, 90, ...)")
 
 	cmdStart.Flags().BoolVarP(&mirroring, "mirroring", "m", false, "Starts Diferencia in mirroring mode which means that the output provided is the one provided by primary")
+	cmdStart.Flags().BoolVar(&returnResult, "returnResult", false, "Set Diferencia to return all avalable information about the current comparision and not only the http status code.")
 	cmdStart.MarkFlagRequired("primary")
 	cmdStart.MarkFlagRequired("candidate")
 

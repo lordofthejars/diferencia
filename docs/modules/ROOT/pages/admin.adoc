@@ -45,6 +45,7 @@ At this time these parameters are:
 * secondary
 * noise detection
 * mode
+* returnResult
 
 To update any of the parameters you only need to send a JSON document using `PUT` http method to `/configuration` endpoint to given host and configured port.
 
@@ -58,6 +59,7 @@ The JSON document must follow next schema:
   "secondary" : "",
   "candidate" : "",
   "secondary" : "",
+  "returnResult": "",
   "noiseDetection" : "", // <1>
   "mode" : "" // <2>
 }
@@ -92,25 +94,27 @@ And the response is:
 [source, json]
 ----
 [
-	{
-		"endpoint": {
-			"method": "GET", // <1>
-			"path": "/" // <2>
-		},
-		"errors": 5 // <3>
-	}
+    {
+        "endpoint":{
+            "method":"GET", // <1>
+            "path":"/" // <2>
+        },
+        "errors":0, // <3>
+        "success":1,
+        "averagePrimaryDuration":357.56, // <4>
+        "averageCandidateDuration":115.26 // <5>
+    }
 ]
 ----
 <1> Http method used in request
 <2> Path used to replicate
 <3> Number of errors
-
-NOTE: Only endpoints with errors are returned, if there is no errors then empy array is returned.
-
-.Stats call with Insomnia
-image::stats.png[]
+<4> Average time taken in all calls against primary in milliseconds
+<5> Average time taken in all calls against candidate in milliseconds
 
 === Dashboard
 
 You can access to Dashboard using a browser to have a web view of what's happening in Diferencia.
 You need to access to `/dashboard/` and a dashboard web page with error endpoints is shown.
+
+image::dashboard.png[]

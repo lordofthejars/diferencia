@@ -16,6 +16,7 @@
 
 ** xref:run-diferencia.adoc#noise[Noise Detection]
 ** xref:https.adoc[Https]
+** xref:run-diferencia.adoc#mirroring[Mirroring]
 ** xref:prometheus.adoc[Prometheus]
 ** xref:run-diferencia.adoc#configuration[Configuration]
 
