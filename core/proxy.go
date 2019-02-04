@@ -245,6 +245,14 @@ type Result struct {
 	EqualContent         bool
 	PrimaryElapsedTime   time.Duration
 	CandidateElapsedTime time.Duration
+	Diff                 DifferenceDescription
+}
+
+// DifferenceDescription offers the description of the differences
+type DifferenceDescription struct {
+	HeadersDiff string `json:"headersDiff,omitempty"`
+	BodyDiff    string `json:"bodyDiff,omitempty"`
+	StatusDiff  string `json:"statusDiff,omitempty"`
 }
 
 // MarshallJson translate object to byte[]
@@ -253,10 +261,12 @@ func (r Result) MarshallJson() ([]byte, error) {
 		Result                   bool
 		PrimaryElapsedTimeNano   int64
 		CandidateElapsedTimeNano int64
+		Description              *DifferenceDescription `json:"description,omitempty"`
 	}{
 		Result:                   r.EqualContent,
 		PrimaryElapsedTimeNano:   r.PrimaryElapsedTime.Nanoseconds(),
 		CandidateElapsedTimeNano: r.CandidateElapsedTime.Nanoseconds(),
+		Description:              &r.Diff,
 	})
 }
 
@@ -342,7 +352,7 @@ func Diferencia(r *http.Request) (Result, Communicationcontent, error) {
 		}
 	}
 
-	result = compareResult(candidateBodyContent, primaryBodyContent, candidateStatus, primaryStatus, candidateHeader, primaryHeader)
+	result, output := compareResult(candidateBodyContent, primaryBodyContent, candidateStatus, primaryStatus, candidateHeader, primaryHeader)
 
 	if Config.IsStoreResultsSet() {
 		primary := exporter.CreateInteraction(primaryFullURL, primaryBodyContent, primaryStatus)
@@ -379,7 +389,7 @@ func Diferencia(r *http.Request) (Result, Communicationcontent, error) {
 		logrus.Debugf("************************")
 	}
 
-	return Result{EqualContent: result, PrimaryElapsedTime: primaryElapsedDuration, CandidateElapsedTime: candidateElapsedDuration}, Communicationcontent{Content: primaryBodyContent, StatusCode: primaryStatus, Header: primaryHeader, Cookies: cookies}, nil
+	return Result{EqualContent: result, PrimaryElapsedTime: primaryElapsedDuration, CandidateElapsedTime: candidateElapsedDuration, Diff: output}, Communicationcontent{Content: primaryBodyContent, StatusCode: primaryStatus, Header: primaryHeader, Cookies: cookies}, nil
 
 }
 
@@ -457,34 +467,45 @@ func readLines(path string) ([]string, error) {
 	return lines, scanner.Err()
 }
 
-func compareResult(candidate, primary []byte, candidateStatus, primaryStatus int, candidateHeader, primaryHeader http.Header) bool {
+func compareResult(candidate, primary []byte, candidateStatus, primaryStatus int, candidateHeader, primaryHeader http.Header) (bool, DifferenceDescription) {
 
 	// TODO This method should be refactored to a chain of responsibility pattern
 	if primaryStatus == candidateStatus {
+		headersDiff := ""
+		headerEqual := true
 		if Config.Headers {
-			if !header.CompareHeaders(candidateHeader, primaryHeader, Config.IgnoreHeadersValues...) {
-				return false
-			}
+			headerEqual, headersDiff = header.CompareHeaders(candidateHeader, primaryHeader, Config.IgnoreHeadersValues...)
 		}
 		// Comparision between documents
 		contentType := primaryHeader.Get("Content-Type")
 		switch {
 		case strings.HasPrefix(contentType, "application/json"):
-			return json.CompareDocuments(candidate, primary, Config.DifferenceMode.String())
+			bodyEqual, bodyDiff := json.CompareDocuments(candidate, primary, Config.DifferenceMode.String())
+
+			if headerEqual && bodyEqual {
+				return bodyEqual, DifferenceDescription{}
+			}
+
+			return bodyEqual && headerEqual, DifferenceDescription{HeadersDiff: headersDiff, BodyDiff: bodyDiff}
 		case strings.HasPrefix(contentType, "text/plain"):
-			return compareText(candidate, primary, Config.LevenshteinPercentage)
+			return compareText(candidate, primary, Config.LevenshteinPercentage), DifferenceDescription{}
 		default:
 			{
 				if Config.ForcePlainText {
-					return compareText(candidate, primary, Config.LevenshteinPercentage)
-				} else {
-					return json.CompareDocuments(candidate, primary, Config.DifferenceMode.String())
+					return compareText(candidate, primary, Config.LevenshteinPercentage), DifferenceDescription{}
 				}
+				bodyEqual, bodyDiff := json.CompareDocuments(candidate, primary, Config.DifferenceMode.String())
+
+				if headerEqual && bodyEqual {
+					return bodyEqual, DifferenceDescription{}
+				}
+
+				return bodyEqual && headerEqual, DifferenceDescription{HeadersDiff: headersDiff, BodyDiff: bodyDiff}
 			}
 		}
-
 	}
-	return false
+
+	return false, DifferenceDescription{StatusDiff: fmt.Sprintf(`"status": %d => %d`, primaryStatus, candidateStatus)}
 }
 
 func compareText(candidate, primary []byte, levenshtein int) bool {
@@ -505,6 +526,13 @@ func diferenciaHandler(w http.ResponseWriter, r *http.Request) {
 
 	mutex.Lock()
 	defer mutex.Unlock()
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		logrus.Errorf("Error reading body: %v", err)
+	}
+	r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+
 	result, primaryCommunication, err := Diferencia(r)
 	if err != nil {
 		if de, ok := err.(*DiferenciaError); ok {
@@ -514,17 +542,18 @@ func diferenciaHandler(w http.ResponseWriter, r *http.Request) {
 
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, err.Error())
+		return
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	if result.EqualContent {
 		if Config.Mirroring {
 			MirrorResponse(primaryCommunication, w)
 		} else {
-			w.WriteHeader(http.StatusOK)
 			if Config.ReturnResult {
 				content, _ := result.MarshallJson()
 				w.Write(content)
 			}
+			w.WriteHeader(http.StatusOK)
 		}
 		exporter.IncrementSuccess(r.Method, r.URL.Path, result.PrimaryElapsedTime, result.CandidateElapsedTime)
 	} else {
@@ -533,11 +562,15 @@ func diferenciaHandler(w http.ResponseWriter, r *http.Request) {
 			MirrorResponse(primaryCommunication, w)
 		} else {
 			w.WriteHeader(http.StatusPreconditionFailed)
+			if Config.ReturnResult {
+				content, _ := result.MarshallJson()
+				w.Write(content)
+			}
 		}
 		if Config.Prometheus {
 			prometheusCounter.WithLabelValues(r.Method, r.URL.Path).Inc()
 		}
-		exporter.IncrementError(r.Method, r.URL.Path)
+		exporter.IncrementError(r.Method, r.URL.Path, string(body[:]), r.URL.RequestURI(), result.Diff.HeadersDiff, result.Diff.BodyDiff, result.Diff.StatusDiff, r.Header)
 	}
 }
 
@@ -546,7 +579,9 @@ func isSafeOperation(method string) bool {
 }
 
 func getContent(r *http.Request, url string) ([]byte, int, http.Header, []*http.Cookie, error) {
-	resp, err := HttpClient.MakeRequest(r, url)
+
+	newRequest := duplicate(r)
+	resp, err := HttpClient.MakeRequest(newRequest, url)
 
 	if err != nil {
 		// In case of error in service we should add as metrics as well or assume that the service itself would communicate to metrics?
@@ -591,6 +626,7 @@ func StartProxy(configuration *DiferenciaConfiguration) {
 		adminMux := http.NewServeMux()
 		adminMux.HandleFunc("/configuration", adminHandler)
 		adminMux.HandleFunc("/stats", exporter.StatsHandler)
+		adminMux.HandleFunc("/dashboard/details", dashboardDetailsHandler)
 		adminMux.HandleFunc("/dashboard/", dashboardHandler)
 		logrus.Errorf("Error starting admin: %s", http.ListenAndServe(":"+strconv.Itoa(Config.AdminPort), adminMux))
 	}()

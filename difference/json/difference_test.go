@@ -20,8 +20,9 @@ var _ = Describe("Json Difference", func() {
 				documentA := loadFromFile("test_fixtures/document-a.json")
 				documentB := loadFromFile("test_fixtures/document-a.json")
 
-				result := json.CompareDocuments(documentA, documentB, core.Strict.String())
+				result, output := json.CompareDocuments(documentA, documentB, core.Strict.String())
 				Expect(result).To(Equal(true))
+				Expect(len(output)).To(Equal(0))
 			})
 		})
 
@@ -30,8 +31,9 @@ var _ = Describe("Json Difference", func() {
 				documentA := loadFromFile("test_fixtures/document-a.json")
 				documentB := loadFromFile("test_fixtures/document-a.json")
 
-				result := json.CompareDocuments(documentA, documentB, core.Subset.String())
+				result, output := json.CompareDocuments(documentA, documentB, core.Subset.String())
 				Expect(result).To(Equal(true))
+				Expect(len(output)).To(Equal(0))
 			})
 		})
 	})
@@ -42,8 +44,9 @@ var _ = Describe("Json Difference", func() {
 				documentA := loadFromFile("test_fixtures/document-a.json")
 				documentB := loadFromFile("test_fixtures/document-b.json")
 
-				result := json.CompareDocuments(documentB, documentA, core.Strict.String())
+				result, output := json.CompareDocuments(documentB, documentA, core.Strict.String())
 				Expect(result).To(Equal(false))
+				Expect(len(output)).Should(BeNumerically(">", 0))
 			})
 		})
 
@@ -52,8 +55,9 @@ var _ = Describe("Json Difference", func() {
 				documentA := loadFromFile("test_fixtures/document-a.json")
 				documentB := loadFromFile("test_fixtures/document-b.json")
 
-				result := json.CompareDocuments(documentB, documentA, core.Subset.String())
+				result, output := json.CompareDocuments(documentB, documentA, core.Subset.String())
 				Expect(result).To(Equal(false))
+				Expect(len(output)).Should(BeNumerically(">", 0))
 			})
 		})
 	})
@@ -64,8 +68,9 @@ var _ = Describe("Json Difference", func() {
 				documentA := loadFromFile("test_fixtures/document-a.json")
 				documentB := loadFromFile("test_fixtures/document-a-change-date.json")
 
-				result := json.CompareDocuments(documentB, documentA, core.Strict.String())
+				result, output := json.CompareDocuments(documentB, documentA, core.Strict.String())
 				Expect(result).To(Equal(false))
+				Expect(len(output)).Should(BeNumerically(">", 0))
 			})
 		})
 
@@ -74,8 +79,9 @@ var _ = Describe("Json Difference", func() {
 				documentA := loadFromFile("test_fixtures/document-a.json")
 				documentB := loadFromFile("test_fixtures/document-a-change-date.json")
 
-				result := json.CompareDocuments(documentB, documentA, core.Subset.String())
+				result, output := json.CompareDocuments(documentB, documentA, core.Subset.String())
 				Expect(result).To(Equal(false))
+				Expect(len(output)).Should(BeNumerically(">", 0))
 			})
 		})
 	})
@@ -86,8 +92,9 @@ var _ = Describe("Json Difference", func() {
 				documentA := loadFromFile("test_fixtures/document-c.json")
 				documentB := loadFromFile("test_fixtures/document-c-update.json")
 
-				result := json.CompareDocuments(documentB, documentA, core.Strict.String())
+				result, output := json.CompareDocuments(documentB, documentA, core.Strict.String())
 				Expect(result).To(Equal(false))
+				Expect(len(output)).Should(BeNumerically(">", 0))
 			})
 		})
 
@@ -96,16 +103,18 @@ var _ = Describe("Json Difference", func() {
 				documentA := loadFromFile("test_fixtures/document-c.json")
 				documentB := loadFromFile("test_fixtures/document-c-update.json")
 
-				result := json.CompareDocuments(documentB, documentA, core.Subset.String())
+				result, output := json.CompareDocuments(documentB, documentA, core.Subset.String())
 				Expect(result).To(Equal(true))
+				Expect(len(output)).To(Equal(0))
 			})
 
 			It("should return that are different when different type", func() {
 				documentA := loadFromFile("test_fixtures/document-c.json")
 				documentB := loadFromFile("test_fixtures/document-c-update-type.json")
 
-				result := json.CompareDocuments(documentB, documentA, core.Subset.String())
+				result, output := json.CompareDocuments(documentB, documentA, core.Subset.String())
 				Expect(result).To(Equal(false))
+				Expect(len(output)).Should(BeNumerically(">", 0))
 			})
 		})
 	})

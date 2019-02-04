@@ -16,30 +16,35 @@ var _ = Describe("Header Comparision", func() {
 				// Given
 
 				// When
-				result := header.CompareHeaders(nil, nil)
+				result, diff := header.CompareHeaders(nil, nil)
 
 				// Then
 				Expect(result).Should(BeTrue())
+				Expect(len(diff)).Should(Equal(0))
 			})
 
 			It("should return no equal if one is nil", func() {
 				// Given
 				mapA := http.Header{}
+				mapA.Add("A", "B")
 				// When
-				result := header.CompareHeaders(mapA, nil)
+				result, diff := header.CompareHeaders(mapA, nil)
 
 				// Then
 				Expect(result).Should(BeFalse())
+				Expect(len(diff)).Should(BeNumerically(">", 0))
 			})
 
 			It("should return no equal if second is nil", func() {
 				// Given
 				mapA := http.Header{}
+				mapA.Add("A", "B")
 				// When
-				result := header.CompareHeaders(nil, mapA)
+				result, diff := header.CompareHeaders(nil, mapA)
 
 				// Then
 				Expect(result).Should(BeFalse())
+				Expect(len(diff)).Should(BeNumerically(">", 0))
 			})
 
 			It("should return false if elements are not the same", func() {
@@ -51,10 +56,11 @@ var _ = Describe("Header Comparision", func() {
 				mapB["Accept-Charset"] = []string{"utf-8"}
 
 				// When
-				result := header.CompareHeaders(mapA, mapB)
+				result, diff := header.CompareHeaders(mapA, mapB)
 
 				// Then
 				Expect(result).Should(BeFalse())
+				Expect(len(diff)).Should(BeNumerically(">", 0))
 			})
 
 			It("should return false if values are not the same", func() {
@@ -66,10 +72,11 @@ var _ = Describe("Header Comparision", func() {
 				mapB["Accept"] = []string{"text/html", "text/plain"}
 
 				// When
-				result := header.CompareHeaders(mapA, mapB)
+				result, diff := header.CompareHeaders(mapA, mapB)
 
 				// Then
 				Expect(result).Should(BeFalse())
+				Expect(len(diff)).Should(BeNumerically(">", 0))
 			})
 
 			It("should return false if contains different number of headers", func() {
@@ -82,10 +89,11 @@ var _ = Describe("Header Comparision", func() {
 				mapB["Accept"] = []string{"text/html"}
 
 				// When
-				result := header.CompareHeaders(mapA, mapB)
+				result, diff := header.CompareHeaders(mapA, mapB)
 
 				// Then
 				Expect(result).Should(BeFalse())
+				Expect(len(diff)).Should(BeNumerically(">", 0))
 			})
 
 			It("should return true if values are the same", func() {
@@ -97,10 +105,11 @@ var _ = Describe("Header Comparision", func() {
 				mapB["Accept"] = []string{"text/html"}
 
 				// When
-				result := header.CompareHeaders(mapA, mapB)
+				result, diff := header.CompareHeaders(mapA, mapB)
 
 				// Then
 				Expect(result).Should(BeTrue())
+				Expect(len(diff)).Should(Equal(0))
 			})
 		})
 		Context("Headers with exclusion set", func() {
@@ -113,10 +122,11 @@ var _ = Describe("Header Comparision", func() {
 				mapB["Accept"] = []string{"text/html", "text/plain"}
 
 				// When
-				result := header.CompareHeaders(mapA, mapB, "Accept")
+				result, diff := header.CompareHeaders(mapA, mapB, "Accept")
 
 				// Then
 				Expect(result).Should(BeTrue())
+				Expect(len(diff)).Should(Equal(0))
 			})
 			It("should return false if contains different number of headers although one is excluded from its value", func() {
 				// Given
@@ -128,10 +138,11 @@ var _ = Describe("Header Comparision", func() {
 				mapB["Accept"] = []string{"text/html"}
 
 				// When
-				result := header.CompareHeaders(mapA, mapB, "Accept-Charset")
+				result, diff := header.CompareHeaders(mapA, mapB, "Accept-Charset")
 
 				// Then
 				Expect(result).Should(BeFalse())
+				Expect(len(diff)).Should(BeNumerically(">", 0))
 			})
 		})
 	})

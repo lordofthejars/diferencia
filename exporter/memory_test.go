@@ -21,7 +21,7 @@ var _ = Describe("Memory Exporter", func() {
 				// Given
 
 				// When
-				exporter.IncrementError("GET", "/")
+				exporter.IncrementError("GET", "/", "", "", "", "", "", nil)
 
 				// Then
 				entries := exporter.Entries()
@@ -33,8 +33,8 @@ var _ = Describe("Memory Exporter", func() {
 				// Given
 
 				// When
-				exporter.IncrementError("GET", "/a")
-				exporter.IncrementError("GET", "/a")
+				exporter.IncrementError("GET", "/a", "", "", "", "", "", nil)
+				exporter.IncrementError("GET", "/a", "", "", "", "", "", nil)
 
 				// Then
 				entries := exporter.Entries()
@@ -87,7 +87,7 @@ var _ = Describe("Memory Exporter", func() {
 				primaryAverage, _ := time.ParseDuration("10ms")
 				candidateAverage, _ := time.ParseDuration("20ms")
 				// When
-				exporter.IncrementError("GET", "/")
+				exporter.IncrementError("GET", "/", "", "", "", "", "", nil)
 				exporter.IncrementSuccess("GET", "/", primaryAverage, candidateAverage)
 
 				// Then
@@ -106,7 +106,7 @@ var _ = Describe("Memory Exporter", func() {
 
 				// When
 				exporter.IncrementSuccess("GET", "/a", primaryAverage1, candidateAverage1)
-				exporter.IncrementError("GET", "/a")
+				exporter.IncrementError("GET", "/a", "", "", "", "", "", nil)
 
 				// Then
 				entries := exporter.Entries()

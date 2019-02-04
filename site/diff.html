@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Builds Summary</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/patternfly/3.59.0/css/patternfly.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/patternfly/3.59.0/css/patternfly-additions.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.0/d3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.11/c3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/patternfly/3.59.0/js/patternfly.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prettify/r298/prettify.min.js"></script>
+</head>
+
+<body>
+
+    <!-- nav -->
+    <nav class="navbar navbar-default navbar-pf" role="navigation">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/dashboard">
+                Diferencia Dashboard
+            </a>
+        </div>
+    </nav>
+
+    <div id="pf-list-simple-expansion" class="list-group list-view-pf list-view-pf-view">
+        
+        <!-- Start -->
+        {{range .ErrorDetails}}
+        <div class="list-group-item">
+            <div class="list-group-item-header">
+                <div class="list-view-pf-expand">
+                    <span class="fa fa-angle-right"></span>
+                </div>
+
+                <div class="list-view-pf-main-info">
+                    <div class="list-view-pf-left">
+                        <span class="fa fa-link list-view-pf-icon-sm"></span>
+                    </div>
+                    <div class="list-view-pf-body">
+                        <div class="list-view-pf-description">
+                            <div class="list-group-item-heading">
+                                {{$.Endpoint.Method}} {{.FullURI}}
+                            </div>
+                            <div class="list-group-item-text">
+                                {{ if .HeaderDiff }}
+                                Header <span style="color:red" class="fa fa-times-circle"></span>
+                                {{else}}
+                                Header <span style="color:green" class="fa fa-check-circle"></span>
+                                {{end}}
+                                {{ if .BodyDiff}}
+                                Body <span style="color:red" class="fa fa-times-circle"></span>
+                                {{else}}
+                                Body <span style="color:green" class="fa fa-check-circle"></span>
+                                {{end}}
+                                {{ if .StatusDiff}}
+                                Status <span style="color:red" class="fa fa-times-circle"></span>
+                                {{else}}
+                                Status <span style="color:green" class="fa fa-check-circle"></span>
+                                {{end}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="list-group-item-container container-fluid hidden">
+                <div class="close">
+                    <span class="pficon pficon-close"></span>
+                </div>
+                <div class="row">
+                    <div class="col-md-9">
+                        <span class="label label-primary">Sampled Headers</span>
+                        <table class="table table-striped table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Header Key</th>
+                                    <th>Header Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{ range $key, $value := .OriginalHeaders }}
+                                <tr>
+                                    <td>{{ $key }}</td>
+                                    <td>{{ $value }}</td>
+                                </tr>
+                                {{ end }}
+                            </tbody>
+                        </table>
+                        <span class="label label-primary">Sampled Body</span>
+                        <pre class="prettyprint">
+                            {{ .OriginalBody }}
+                        </pre>
+                        
+                        <span class="label label-danger">Headers Diff</span>
+                        <pre class="prettyprint">
+                            {{ .HeaderDiff }}
+                        </pre>
+
+                        <span class="label label-danger">Body Diff</span>
+                        <pre class="prettyprint">
+                            {{ .BodyDiff }}
+                        </pre>
+
+                        <span class="label label-danger">Status Diff</span>
+                        <pre class="prettyprint">
+                            {{ .StatusDiff }}
+                        </pre>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{end}}
+        <!-- End-->
+    </div>
+    <script>
+        $(document).ready(function () {
+            // Row Checkbox Selection
+            $("#pf-list-simple-expansion input[type='checkbox']").change(function (e) {
+                if ($(this).is(":checked")) {
+                    $(this).closest('.list-group-item').addClass("active");
+                } else {
+                    $(this).closest('.list-group-item').removeClass("active");
+                }
+            });
+            // toggle dropdown menu
+            $("#pf-list-simple-expansion .list-view-pf-actions").on('show.bs.dropdown', function () {
+                var $this = $(this);
+                var $dropdown = $this.find('.dropdown');
+                var space = $(window).height() - $dropdown[0].getBoundingClientRect().top - $this.find('.dropdown-menu').outerHeight(true);
+                $dropdown.toggleClass('dropup', space < 10);
+            });
+
+            // click the list-view heading then expand a row
+            $("#pf-list-simple-expansion .list-group-item-header").click(function (event) {
+                if (!$(event.target).is("button, a, input, .fa-ellipsis-v")) {
+                    $(this).find(".fa-angle-right").toggleClass("fa-angle-down")
+                        .end().parent().toggleClass("list-view-pf-expand-active")
+                        .find(".list-group-item-container").toggleClass("hidden");
+                } else {
+                }
+            })
+
+            // click the close button, hide the expand row and remove the active status
+            $("#pf-list-simple-expansion .list-group-item-container .close").on("click", function () {
+                $(this).parent().addClass("hidden")
+                    .parent().removeClass("list-view-pf-expand-active")
+                    .find(".fa-angle-right").removeClass("fa-angle-down");
+            })
+
+        });
+    </script>
+    <script>
+        (function($) {
+            $(document).ready(function(){
+                prettyPrint();
+            });
+        })(jQuery);
+    </script>
+
+</html>

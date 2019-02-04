@@ -16,6 +16,11 @@ type DashboardVO struct {
 	Configuration DiferenciaConfiguration
 }
 
+type FailingEntries struct {
+	Endpoint     exporter.URLCall
+	ErrorDetails []exporter.ErrorData
+}
+
 func dashboardHandler(w http.ResponseWriter, r *http.Request) {
 
 	element := ExtractFile(*r.URL)
@@ -28,6 +33,21 @@ func dashboardHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+}
+
+func dashboardDetailsHandler(w http.ResponseWriter, r *http.Request) {
+
+	method := r.URL.Query().Get("method")
+	path := r.URL.Query().Get("path")
+
+	entry := exporter.FindEntry(method, path)
+	err := renderHtmlTemplate("diff.html", w, FailingEntries{Endpoint: entry.Endpoint, ErrorDetails: entry.ErrorDetails}, site)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, err.Error())
+		return
+	}
 }
 
 func renderHtmlTemplate(tmplName string, w http.ResponseWriter, p interface{}, box packr.Box) error {

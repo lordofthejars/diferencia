@@ -87,7 +87,7 @@
         <div class="card-pf card-pf-view card-pf-view-select card-pf-view-multi-select">
           <div class="card-pf-body">
             <h2 class="card-pf-title text-center">
-              {{.Endpoint.Method}} - {{.Endpoint.Path}}
+              <a href="details?method={{.Endpoint.Method}}&path={{.Endpoint.Path}}">{{.Endpoint.Method}} - {{.Endpoint.Path}}</a>
             </h2>
             <div class="card-pf-items text-center">
                 <div class="card-pf-item">
