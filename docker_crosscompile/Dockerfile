@@ -1,4 +1,4 @@
-FROM golang:1.9.2-alpine3.7
+FROM golang:1.10.8-alpine3.9
 
 MAINTAINER Alex Soto <asotobu@gmail.com>
 
