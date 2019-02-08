@@ -118,3 +118,8 @@ You can access to Dashboard using a browser to have a web view of what's happeni
 You need to access to `/dashboard/` and a dashboard web page with error endpoints is shown.
 
 image::dashboard.png[]
+
+Also if you click in the `path` inside the card you'll be redirected to a more detailed page where you can see each of the requests that didn't suceeded.
+
+image::diff.png[]
+
