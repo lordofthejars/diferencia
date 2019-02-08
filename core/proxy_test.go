@@ -234,6 +234,7 @@ var _ = Describe("Proxy", func() {
 				//Then
 
 				Expect(result.EqualContent).Should(Equal(true))
+				Expect(result.Diff.BodyDiff).Should(Equal(""))
 				Expect(err).Should(Succeed())
 			})
 			It("should return duration of calls", func() {
@@ -303,6 +304,7 @@ var _ = Describe("Proxy", func() {
 				//Then
 
 				Expect(result.EqualContent).Should(Equal(false))
+				Expect(len(result.Diff.StatusDiff)).Should(BeNumerically(">", 0))
 				Expect(err).Should(Succeed())
 			})
 			It("should return false if both documents are different", func() {
@@ -337,6 +339,7 @@ var _ = Describe("Proxy", func() {
 				//Then
 
 				Expect(result.EqualContent).Should(Equal(false))
+				Expect(len(result.Diff.BodyDiff)).Should(BeNumerically(">", 0))
 				Expect(err).Should(Succeed())
 			})
 		})

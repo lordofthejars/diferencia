@@ -106,7 +106,7 @@ var _ = Describe("Noise Operation", func() {
 					Fail(fmt.Sprintf("Failing removing noise. Reason: %q", err))
 				}
 
-				result := json.CompareDocuments(candidate, primary, "Strict")
+				result, _ := json.CompareDocuments(candidate, primary, "Strict")
 
 				Expect(result).Should(Equal(true))
 
@@ -128,7 +128,7 @@ var _ = Describe("Noise Operation", func() {
 					Fail(fmt.Sprintf("Failing removing noise. Reason: %q", err))
 				}
 
-				result := json.CompareDocuments(candidate, primary, "Strict")
+				result, _ := json.CompareDocuments(candidate, primary, "Strict")
 
 				Expect(result).Should(Equal(true))
 
@@ -147,7 +147,7 @@ var _ = Describe("Noise Operation", func() {
 					Fail(fmt.Sprintf("Failing removing noise. Reason: %q", err))
 				}
 
-				result := json.CompareDocuments(candidate, primary, "Strict")
+				result, _ := json.CompareDocuments(candidate, primary, "Strict")
 
 				Expect(result).Should(Equal(true))
 
@@ -166,7 +166,7 @@ var _ = Describe("Noise Operation", func() {
 					Fail(fmt.Sprintf("Failing removing noise. Reason: %q", err))
 				}
 
-				result := json.CompareDocuments(candidate, primary, "Strict")
+				result, _ := json.CompareDocuments(candidate, primary, "Strict")
 
 				Expect(result).Should(Equal(true))
 
@@ -188,7 +188,7 @@ var _ = Describe("Noise Operation", func() {
 					Fail(fmt.Sprintf("Failing removing noise. Reason: %q", err))
 				}
 
-				result := json.CompareDocuments(candidate, primary, "Strict")
+				result, _ := json.CompareDocuments(candidate, primary, "Strict")
 
 				Expect(result).Should(Equal(false))
 

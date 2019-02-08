@@ -5,18 +5,34 @@ import (
 )
 
 // CompareDocuments comparing two JSON documents and returns true or false according to configured difference
-func CompareDocuments(candidate, original []byte, difference string) bool {
-	options := jsondiff.DefaultConsoleOptions()
+func CompareDocuments(candidate, original []byte, difference string) (bool, string) {
+	options := defaultJsonOptions()
 
-	result, _ := jsondiff.Compare(candidate, original, &options)
+	result, output := jsondiff.Compare(candidate, original, &options)
+
+	finalResult := false
+	finalOutput := ""
 
 	switch difference {
 	case "Strict":
-		return result == jsondiff.FullMatch
+		finalResult = result == jsondiff.FullMatch
 	case "Subset":
-		return result == jsondiff.FullMatch || result == jsondiff.SupersetMatch
+		finalResult = result == jsondiff.FullMatch || result == jsondiff.SupersetMatch
 	}
 
-	return false
+	if !finalResult {
+		finalOutput = output
+	}
 
+	return finalResult, finalOutput
+
+}
+
+func defaultJsonOptions() jsondiff.Options {
+	return jsondiff.Options{
+		Added:   jsondiff.Tag{Begin: "", End: ""},
+		Removed: jsondiff.Tag{Begin: "", End: ""},
+		Changed: jsondiff.Tag{Begin: "", End: ""},
+		Indent:  "    ",
+	}
 }
