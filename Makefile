@@ -10,6 +10,7 @@ tools: ## Installs required go tools
 	go get -u golang.org/x/tools/cmd/goimports
 	go get -u github.com/onsi/ginkgo/ginkgo
 	go get -u github.com/onsi/gomega
+	go get -u github.com/gobuffalo/packr/packr
 
 .PHONY: format
 format: ## Removes unneeded imports and formats source code
@@ -24,7 +25,7 @@ test:
 	ginkgo -r
 
 .PHONY: build
-build: install
+build: install test
 	packr build -o diferencia
 
 .PHONY: crossbuild
