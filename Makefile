@@ -7,7 +7,7 @@ install:
 
 .PHONY: test
 test:
-	go test -v -race $(go list ./... | grep -v "/vendor/")
+	ginkgo -r
 
 .PHONY: build
 build:
