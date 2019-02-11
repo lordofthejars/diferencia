@@ -1,34 +1,36 @@
-
 ### Go ###
-
-# Ignore all
-*
-
-# Unignore all with extensions
-!*.*
-
-# Unignore all dirs
-!*/
-
-!Makefile
-!Dockerfile
-
-# Binaries for programs and plugins
 *.exe
 *.dll
 *.so
 *.dylib
 
+# Test binary, build with `go test -c`
+*.test
+
+# Output of the go coverage tools
+*.out
+*.coverprofile
+
+# Dependencies
+vendor/
+
+# Build
+binaries/
+
+### Golang / IDEA ###
+.idea/
+*.iws
+/out/
+
+# Crashlytics (for Android Studio and IntelliJ)
+com_crashlytics_export_strings.xml
+crashlytics.properties
+crashlytics-build.properties
+
+# Ignore Ginkgo ginkgo-test-results.xml files
+*ginkgo-test-results.xml
+
 # Antora
 public/
 .cache/
 .DS_Store
-
-# Test binary, build with `go test -c`
-*.test
-
-# Output of the go coverage tool, specifically when used with LiteIDE
-*.out
-
-
-vendor/
