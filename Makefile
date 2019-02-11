@@ -1,5 +1,8 @@
 version ?= latest
 
+CUR_DIR:=$(shell pwd)
+BINARY_DIR:=$(CUR_DIR)/binaries
+
 .PHONY: all
 all: tools install format lint build ## (default) Runs 'tools deps format lint compile' targets
 
@@ -29,7 +32,7 @@ test:
 
 .PHONY: build
 build: install test
-	packr build -o diferencia
+	packr build -o $(BINARY_DIR)/diferencia
 
 .PHONY: crossbuild
 crossbuild:
