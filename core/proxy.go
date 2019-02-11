@@ -342,7 +342,7 @@ func Diferencia(r *http.Request) (Result, Communicationcontent, error) {
 			}
 
 			if err != nil {
-				logrus.Error("Error detecting noise between %s and %s. (%s)", primaryFullURL, secondaryFullURL, err.Error())
+				logrus.WithError(err).Errorf("Error detecting noise between %s and %s.", primaryFullURL, secondaryFullURL)
 				return Result{EqualContent: false}, Communicationcontent{Content: primaryBodyContent, StatusCode: primaryStatus, Header: primaryHeader, Cookies: cookies}, &DiferenciaError{http.StatusBadRequest, fmt.Sprintf("Error detecting noise between %s and %s. (%s)", primaryFullURL, secondaryFullURL, err.Error())}
 			}
 
