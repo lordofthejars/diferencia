@@ -3,7 +3,6 @@ version ?= latest
 .PHONY: install
 install:
 	dep ensure
-	packr build -o diferencia
 
 .PHONY: tools
 tools: ## Installs required go tools
@@ -20,7 +19,7 @@ test:
 	ginkgo -r
 
 .PHONY: build
-build:
+build: install
 	packr build -o diferencia
 
 .PHONY: crossbuild
