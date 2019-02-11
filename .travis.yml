@@ -10,6 +10,7 @@ before_install:
 
 install:
   - dep ensure
+  - make tools
 
 script:
   - ginkgo -r
