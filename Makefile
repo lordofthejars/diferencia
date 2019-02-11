@@ -6,6 +6,7 @@ install:
 
 .PHONY: tools
 tools: ## Installs required go tools
+	go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
 	go get -u golang.org/x/tools/cmd/goimports
 	go get -u github.com/onsi/ginkgo/ginkgo
 	go get -u github.com/onsi/gomega
@@ -13,6 +14,10 @@ tools: ## Installs required go tools
 .PHONY: format
 format: ## Removes unneeded imports and formats source code
 	goimports -l -w ./core/ ./difference/ ./exporter/ ./log/ ./metrics/
+
+.PHONY: lint
+lint: install ## Concurrently runs a whole bunch of static analysis tools
+	golangci-lint run
 
 .PHONY: test
 test:
