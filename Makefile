@@ -1,5 +1,8 @@
 version ?= latest
 
+.PHONY: all
+all: tools install format lint build ## (default) Runs 'tools deps format lint compile' targets
+
 .PHONY: install
 install:
 	dep ensure
